@@ -1,0 +1,23 @@
+{
+  "name": "spot-the-anomaly",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Ingest EPR packaging-waste submissions, fan out to a registry of anomaly detectors, present per-detector scored findings for a regulator.",
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "node src/web/server.js",
+    "start": "node src/web/server.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "@hapi/hapi": "^21.4.9",
+    "@hapi/inert": "^7.1.1",
+    "@hapi/vision": "^7.0.3",
+    "exceljs": "^4.4.0",
+    "govuk-frontend": "^6.2.0",
+    "nunjucks": "^3.2.4"
+  }
+}
