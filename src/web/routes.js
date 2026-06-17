@@ -17,6 +17,7 @@
 const Boom = require('@hapi/boom');
 
 const { triage } = require('../engine/triage');
+const { SEVERITIES } = require('../model/finding');
 
 /**
  * Severity → govuk tag modifier class. Severity is a *tag* on each finding (PRD
@@ -68,8 +69,11 @@ function buildDetectorList(result) {
  * score, and a link into the finding detail page (the detail route lands next).
  *
  * Ranking + surfacing is delegated to the engine's pure `triage` (re-run per
- * request, ADR-009): this item ships the default (surface-everything, ranked)
- * view; the live-threshold item overlays request query params onto `options`.
+ * request, ADR-009): `options` are the request's GET query params overlaid onto the
+ * defaults, so changing `?minScore`/`?minSeverity`/`?limit` re-ranks and re-filters
+ * the list with NO code change (golden-path step 6). `triage` coerces those raw
+ * query strings defensively, so a malformed param degrades to "no threshold" rather
+ * than erroring the page.
  *
  * Returns `null` for an unknown OR shadow detector (not in the surfaced set) so the
  * route can answer 404 rather than render an empty page (ADR-008).
@@ -80,7 +84,7 @@ function buildDetectorList(result) {
  *
  * @param {object} result the engine result (`{ detectors, byDetector }`).
  * @param {string} detectorId the requested detector id.
- * @param {object} [options] triage thresholds (defaults surface everything).
+ * @param {object} [options] triage thresholds, typically `request.query`.
  * @returns {object|null} the view model, or null if the detector isn't surfaced.
  */
 function buildDetectorView(result, detectorId, options = {}) {
@@ -104,11 +108,32 @@ function buildDetectorView(result, detectorId, options = {}) {
     id: record.id,
     title: record.title,
     scope: record.scope,
+    href: `/detectors/${encodeURIComponent(detectorId)}`,
     total: triaged.total,
     surfacedCount: triaged.surfacedCount,
     hiddenCount: triaged.hiddenCount,
+    // The resolved (coerced) thresholds, so the filter form pre-fills the values
+    // actually applied this request — the threshold UI reflects engine state, not
+    // the raw query string.
+    thresholds: triaged.thresholds,
+    severityOptions: buildSeverityOptions(triaged.thresholds.minSeverity),
     rows,
   };
+}
+
+/**
+ * The `<select>` items for the minimum-severity filter: an "Any severity" no-gate
+ * option plus one per `SEVERITY` (hottest first, so the most selective gate reads at
+ * the top), marking the currently-applied gate selected. Built here, not in the
+ * template, so the view stays logic-free and the enum stays the single source of
+ * truth (the form can never offer a severity the model doesn't define).
+ */
+function buildSeverityOptions(selected) {
+  const items = [{ value: '', text: 'Any severity', selected: !selected }];
+  for (const severity of [...SEVERITIES].reverse()) {
+    items.push({ value: severity, text: severity, selected: severity === selected });
+  }
+  return items;
 }
 
 /**
@@ -198,14 +223,16 @@ function registerPageRoutes(server, { data, result }) {
     handler: (request, h) => h.view('detectors', { pageTitle: 'Detectors', detectors }),
   });
 
-  // Golden-path steps 3–4: one detector's findings, ranked highest score first,
-  // each linking to its detail page. Unknown/shadow detector → 404 (defensive; the
-  // list above only links surfaced detectors).
+  // Golden-path steps 3–4 + 6: one detector's findings, ranked highest score first,
+  // each linking to its detail page. The GET query (`minScore`/`minSeverity`/`limit`)
+  // is overlaid onto triage so the threshold form re-ranks/re-filters live with no
+  // code change (ADR-009). Unknown/shadow detector → 404 (defensive; the list above
+  // only links surfaced detectors).
   server.route({
     method: 'GET',
     path: '/detectors/{id}',
     handler: (request, h) => {
-      const detector = buildDetectorView(result, request.params.id);
+      const detector = buildDetectorView(result, request.params.id, request.query);
       if (!detector) return Boom.notFound(`Unknown detector "${request.params.id}"`);
       return h.view('detector', { pageTitle: detector.title, detector });
     },

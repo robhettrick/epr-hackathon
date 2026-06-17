@@ -12,6 +12,9 @@
 {% from "govuk/components/table/macro.njk" import govukTable %}
 {% from "govuk/components/tag/macro.njk" import govukTag %}
 {% from "govuk/components/back-link/macro.njk" import govukBackLink %}
+{% from "govuk/components/input/macro.njk" import govukInput %}
+{% from "govuk/components/select/macro.njk" import govukSelect %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
 
 {% block beforeContent %}
   {{ govukBackLink({ text: "Back to detectors", href: "/detectors" }) }}
@@ -26,8 +29,53 @@
         Findings ranked by score, highest first. Showing
         {{ detector.surfacedCount }} of {{ detector.total }}
         {{ "finding" if detector.total == 1 else "findings" }}
-        (subject: {{ detector.scope }}).
+        (subject: {{ detector.scope }}){% if detector.hiddenCount > 0 %}, {{ detector.hiddenCount }} below the current threshold{% endif %}.
       </p>
+
+      {#
+        Live-threshold control (golden-path step 6): a plain GET form whose fields
+        are the triage thresholds. Submitting re-requests this same page with the
+        thresholds as query params — the server re-runs triage and re-renders the
+        re-ranked/filtered list. No client state, no code change (ADR-009).
+      #}
+      <form method="get" action="{{ detector.href }}" class="govuk-!-margin-bottom-6">
+        <div class="govuk-grid-row">
+          <div class="govuk-grid-column-one-third">
+            {{ govukInput({
+              label: { text: "Minimum score" },
+              hint: { text: "0 to 100" },
+              id: "minScore",
+              name: "minScore",
+              type: "number",
+              classes: "govuk-input--width-5",
+              attributes: { min: "0", max: "100" },
+              value: detector.thresholds.minScore
+            }) }}
+          </div>
+          <div class="govuk-grid-column-one-third">
+            {{ govukSelect({
+              label: { text: "Minimum severity" },
+              id: "minSeverity",
+              name: "minSeverity",
+              items: detector.severityOptions
+            }) }}
+          </div>
+          <div class="govuk-grid-column-one-third">
+            {{ govukInput({
+              label: { text: "Limit" },
+              hint: { text: "Max findings to show" },
+              id: "limit",
+              name: "limit",
+              type: "number",
+              classes: "govuk-input--width-5",
+              attributes: { min: "1" },
+              value: detector.thresholds.limit
+            }) }}
+          </div>
+        </div>
+        {{ govukButton({ text: "Apply thresholds" }) }}
+        <a class="govuk-link govuk-!-margin-left-3" href="{{ detector.href }}">Reset</a>
+      </form>
 
       {% set rows = [] %}
       {% for r in detector.rows %}
