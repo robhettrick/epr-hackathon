@@ -45,11 +45,18 @@ const ROOT = Path.join(__dirname, '..', '..');
 const PORT = Number(process.env.PORT) || 3000;
 const HOST = process.env.HOST || '0.0.0.0';
 
-// The two real submissions on the golden path (≥2 files, two materials/operators).
-const FIXTURES = [
-  Path.join(ROOT, 'fixtures', 'exporter_E-ACC12245AL_E25SR500020912AL-b3c87758.xlsx'),
-  Path.join(ROOT, 'fixtures', 'exporter_E-ACC12245FB_E25SR500020912FB.xlsx'),
-];
+// Default to the curated demo set (fast boot, legible seeded findings: ewc 5,
+// chain 8, shared supplier/vehicle across operators). Set FIXTURES=raw to load
+// the full 1,000-load real submissions instead (slow boot, shows scale).
+const FIXTURES = process.env.FIXTURES === 'raw'
+  ? [
+      Path.join(ROOT, 'fixtures', 'exporter_E-ACC12245AL_E25SR500020912AL-b3c87758.xlsx'),
+      Path.join(ROOT, 'fixtures', 'exporter_E-ACC12245FB_E25SR500020912FB.xlsx'),
+    ]
+  : [
+      Path.join(ROOT, 'fixtures', 'demo', 'demo_exporter_AL.xlsx'),
+      Path.join(ROOT, 'fixtures', 'demo', 'demo_exporter_FB.xlsx'),
+    ];
 
 // govuk-frontend ships its Nunjucks templates + compiled assets under dist/.
 // Resolve the package root via require so the path holds wherever node_modules
