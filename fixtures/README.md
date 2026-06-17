@@ -28,6 +28,7 @@ and the detectors. Each has the same sheet structure: data on *Exported (section
   generated — see `docs/anomaly-scenarios-from-sample.md`. Seed deliberate anomalies for the demo
   rather than relying on artifacts.
 
-## Still to add
+## Reference data (already generated)
 - `reference/allowed-codes.json` — valid EWC codes + materials extracted from `Sheet1`
-  (powers the EWC-not-packaging and material-validity detectors).
+  (`ewcCodes` 842, `packagingEwcCodes` 10, `materials` 41). Powers the EWC-not-packaging and
+  material-validity detectors. Already committed — don't regenerate.

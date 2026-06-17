@@ -177,13 +177,14 @@ fail on network/keys. The LLM never decides — detectors decide.
   rule/profile/statistical, **not** trained classifiers.
 
 ## 10. Demo script (~2 min)
-"Three operators' submissions go in." → Show the **list of detectors**, each with a count and a
+"Two operators' submissions go in — an aluminium exporter and a fibre-based-composite exporter"
+(≥2 files is the bar; more is fine). → Show the **list of detectors**, each with a count and a
 ranked list. → Open **EWC-not-packaging**: top hit is a hazardous thermal code on 'packaging'
 waste, with the reason. → Open **Destination plausibility**: aluminium to Tuvalu. → Open **Single
-supplier → many operators**: one supplier feeding five operators across the three files — "you
-can only see this because we ingested the whole population." → **Drag the threshold** on a
-detector and watch its list re-rank. → Close: "Each scenario is one detector; adding the next is
-one file — the system grows with what regulators learn."
+supplier → many operators**: one supplier appearing across **both operators'** submissions — "you
+can only see this because we ingested the whole population, not one file." → **Drag the threshold**
+on a detector and watch its list re-rank. → Close: "Each scenario is one detector; adding the next
+is one file — the system grows with what regulators learn."
 
 ## 11. Out of scope / stretch
 **Out:** auth, write-back, trained ML, real Companies House/DVLA at runtime, full taxonomy.

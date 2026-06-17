@@ -54,8 +54,9 @@ The demo script (PRD §10) runs start to finish without a manual fix, on the fix
   key on material, not assume aluminium.
 - Network detectors need a **seeded shared entity** (supplier/vehicle) across files — synthetic
   data won't overlap naturally (see `fixtures/README.md`).
-- Reference lists in `reference/allowed-codes.json` (valid EWC codes + materials, from the
-  template's `Sheet1`) — **still to generate**.
+- Reference lists in `reference/allowed-codes.json` (already generated from the template's
+  `Sheet1`): `ewcCodes` (842), `packagingEwcCodes` (10 × `15 01 xx`), `materials` (41). Don't
+  regenerate.
 
 ## Reference (context, NOT specs — read for detail, don't treat as scope)
 - `docs/anomaly-scenarios-from-sample.md` — exact field→detector mappings, real counts, reason codes
