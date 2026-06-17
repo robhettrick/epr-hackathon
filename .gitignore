@@ -1,0 +1,27 @@
+# dependencies
+node_modules/
+npm-debug.log*
+
+# env / secrets
+.env
+.env.*
+
+# editor / OS
+.idea/
+.vscode/
+.DS_Store
+
+# Ralph loop artifacts (regenerated; never hand-committed)
+IMPLEMENTATION_PLAN.md
+PROGRESS.md
+PROMPT_plan.md
+PROMPT_build.md
+.ralph/
+
+# LLM explainer cache (regenerated)
+src/explain/cache/
+
+# build / test output
+dist/
+build/
+coverage/
