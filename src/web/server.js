@@ -37,6 +37,7 @@ const Nunjucks = require('nunjucks');
 
 const { ingest } = require('../ingest');
 const { run } = require('../engine/orchestrator');
+const { registerPageRoutes } = require('./routes');
 
 // --- Boot configuration -----------------------------------------------------
 
@@ -160,27 +161,6 @@ function registerStaticRoutes(server) {
     method: 'GET',
     path: '/assets/{param*}',
     handler: { directory: { path: Path.join(GOVUK_PUBLIC, 'assets'), redirectToSlash: false, index: false } },
-  });
-}
-
-/**
- * Register the page routes. For this increment that is just the overview page at
- * `/`, which renders boot stats to prove ingest + the engine ran. The per-detector
- * list/detail/threshold routes land in their own plan items.
- */
-function registerPageRoutes(server, { data, result }) {
-  const surfaced = result.detectors.filter((d) => d.surfaced);
-  const summary = {
-    loads: data.loads.length,
-    operators: data.entities.operators.size,
-    detectors: surfaced.length,
-    findings: surfaced.reduce((total, d) => total + d.count, 0),
-  };
-
-  server.route({
-    method: 'GET',
-    path: '/',
-    handler: (request, h) => h.view('home', { pageTitle: 'Overview', summary }),
   });
 }
 

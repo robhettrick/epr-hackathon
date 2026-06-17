@@ -9,6 +9,7 @@
 {% extends "layout.njk" %}
 
 {% from "govuk/components/summary-list/macro.njk" import govukSummaryList %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
 
 {% block content %}
   <div class="govuk-grid-row">
@@ -33,6 +34,12 @@
         These figures come from the fixtures ingested at boot and a single engine
         run held in memory — the demo runs database-free.
       </p>
+
+      {{ govukButton({
+        text: "View detectors",
+        href: "/detectors",
+        isStartButton: true
+      }) }}
     </div>
   </div>
 {% endblock %}

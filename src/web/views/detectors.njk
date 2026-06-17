@@ -1,0 +1,45 @@
+{#
+  detectors.njk — the detector list view (golden-path step 4, GET /detectors).
+
+  Lists every surfaced detector with its finding count and a link into that
+  detector's ranked findings list. This is the regulator's entry point after
+  ingest: the demo shows the anomaly surface as one scored list *per detector*
+  (PRD §4/§5), so the count is each detector's own tally — not a single blended
+  number. Shadow detectors are excluded upstream (ADR-008).
+#}
+{% extends "layout.njk" %}
+
+{% from "govuk/components/table/macro.njk" import govukTable %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-full">
+      <h1 class="govuk-heading-xl">Detectors</h1>
+      <p class="govuk-body-l">
+        Each detector reports its own scored, triaged list of findings for a
+        regulator to investigate. Select a detector to see its ranked findings.
+      </p>
+
+      {% set rows = [] %}
+      {% for d in detectors %}
+        {% set rows = (rows.push([
+          { html: '<a class="govuk-link" href="' + d.href + '">' + d.title + '</a>' },
+          { text: d.scope },
+          { text: d.count, format: "numeric" }
+        ]), rows) %}
+      {% endfor %}
+
+      {{ govukTable({
+        caption: "All detectors run on this dataset",
+        captionClasses: "govuk-table__caption--m",
+        firstCellIsHeader: false,
+        head: [
+          { text: "Detector" },
+          { text: "Subject" },
+          { text: "Findings", format: "numeric" }
+        ],
+        rows: rows
+      }) }}
+    </div>
+  </div>
+{% endblock %}
