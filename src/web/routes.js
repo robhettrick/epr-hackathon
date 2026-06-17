@@ -112,6 +112,68 @@ function buildDetectorView(result, detectorId, options = {}) {
 }
 
 /**
+ * Render one evidence/thresholds value for the detail view. Findings are a uniform
+ * contract (PRD §5.2) whose `evidence`/`thresholdsUsed` are detector-specific shapes,
+ * so the detail view must display ANY shape with no per-detector branching (ADR-004):
+ * primitives stringify, dates ISO-format, nested objects/arrays render as JSON, and a
+ * null/undefined shows as an em dash. The view escapes the result as data.
+ */
+function describeValue(value) {
+  if (value === null || value === undefined) return '—';
+  if (value instanceof Date) return value.toISOString();
+  if (typeof value === 'object') return JSON.stringify(value);
+  return String(value);
+}
+
+/** Flatten a plain object into `{ key, value }` rows for a govuk summary list,
+ * stringifying each value generically. A non-object (or empty) yields no rows. */
+function toDetailRows(obj) {
+  if (!obj || typeof obj !== 'object') return [];
+  return Object.entries(obj).map(([key, value]) => ({ key, value: describeValue(value) }));
+}
+
+/**
+ * The finding detail view (golden-path step 5): one finding's reason code, the
+ * evidence (the figures that tripped it) and the `thresholdsUsed` echo — the page a
+ * regulator opens to understand WHY a subject was flagged and decide whether to act.
+ *
+ * Resolves the finding by `detectorId` + `findingId` (the finding's `subject.id`,
+ * matched as a string since it arrives from the URL) over the in-memory read model —
+ * no triage/threshold dependency, so a finding is reachable by its stable id even if
+ * the current threshold would hide it from the ranked list.
+ *
+ * Returns `null` (→ 404) for an unknown/shadow detector OR an unknown finding id, so
+ * the route never renders an empty detail page (ADR-008).
+ *
+ * @param {object} result the engine result (`{ detectors, byDetector }`).
+ * @param {string} detectorId the requested detector id.
+ * @param {string} findingId the requested finding's `subject.id` (as a URL string).
+ * @returns {object|null} the detail view model, or null if it can't be resolved.
+ */
+function buildFindingView(result, detectorId, findingId) {
+  const record = result.detectors.find((d) => d.id === detectorId && d.surfaced);
+  if (!record) return null;
+
+  const findings = result.byDetector[detectorId] || [];
+  const finding = findings.find((f) => String(f.subject.id) === String(findingId));
+  if (!finding) return null;
+
+  return {
+    detectorId: record.id,
+    detectorTitle: record.title,
+    detectorScope: record.scope,
+    detectorHref: `/detectors/${encodeURIComponent(detectorId)}`,
+    subject: finding.subject,
+    score: finding.score,
+    severity: finding.severity,
+    severityTag: SEVERITY_TAG[finding.severity] || 'govuk-tag--grey',
+    reason: finding.reason,
+    evidence: toDetailRows(finding.evidence),
+    thresholdsUsed: toDetailRows(finding.thresholdsUsed),
+  };
+}
+
+/**
  * Register the page routes against the wired server, closing over the in-memory
  * read model so each handler is a synchronous render with no I/O.
  *
@@ -148,8 +210,26 @@ function registerPageRoutes(server, { data, result }) {
       return h.view('detector', { pageTitle: detector.title, detector });
     },
   });
+
+  // Golden-path step 5: one finding's detail — reason + evidence + thresholdsUsed.
+  // Resolved by detector id + finding id (subject.id) over the read model; an
+  // unknown detector OR an unknown finding id → 404.
+  server.route({
+    method: 'GET',
+    path: '/detectors/{id}/findings/{findingId}',
+    handler: (request, h) => {
+      const { id, findingId } = request.params;
+      const finding = buildFindingView(result, id, findingId);
+      if (!finding) return Boom.notFound(`Unknown finding "${findingId}" for detector "${id}"`);
+      return h.view('finding', { pageTitle: finding.detectorTitle, finding });
+    },
+  });
 }
 
 module.exports = {
-  registerPageRoutes, buildSummary, buildDetectorList, buildDetectorView,
+  registerPageRoutes,
+  buildSummary,
+  buildDetectorList,
+  buildDetectorView,
+  buildFindingView,
 };

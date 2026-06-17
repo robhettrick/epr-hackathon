@@ -1,0 +1,63 @@
+{#
+  finding.njk — the finding detail view (golden-path step 5,
+  GET /detectors/{id}/findings/{findingId}).
+
+  The page a regulator opens from a ranked list to understand WHY a subject was
+  flagged: the plain-English reason, the evidence (the actual figures that tripped
+  the detector) and the thresholds that were in force. Evidence/thresholds are a
+  detector-specific shape rendered generically (no per-detector branching, ADR-004);
+  govuk summary-list `text:` escapes every value as data — submission free-text is
+  never trusted as markup.
+#}
+{% extends "layout.njk" %}
+
+{% from "govuk/components/summary-list/macro.njk" import govukSummaryList %}
+{% from "govuk/components/tag/macro.njk" import govukTag %}
+{% from "govuk/components/back-link/macro.njk" import govukBackLink %}
+{% from "govuk/components/inset-text/macro.njk" import govukInsetText %}
+
+{% block beforeContent %}
+  {{ govukBackLink({ text: "Back to " + finding.detectorTitle, href: finding.detectorHref }) }}
+{% endblock %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <span class="govuk-caption-xl">{{ finding.detectorTitle }}</span>
+      <h1 class="govuk-heading-xl">{{ finding.subject.label | escape if finding.subject.label else finding.subject.id }}</h1>
+
+      {{ govukSummaryList({
+        rows: [
+          { key: { text: "Subject" }, value: { text: finding.subject.type } },
+          { key: { text: "Severity" }, value: { html: govukTag({ text: finding.severity, classes: finding.severityTag }) } },
+          { key: { text: "Score" }, value: { text: finding.score } }
+        ]
+      }) }}
+
+      <h2 class="govuk-heading-m">Why this was flagged</h2>
+      {{ govukInsetText({ text: finding.reason or "No reason recorded." }) }}
+
+      <h2 class="govuk-heading-m">Evidence</h2>
+      {% if finding.evidence.length %}
+        {% set evidenceRows = [] %}
+        {% for e in finding.evidence %}
+          {% set evidenceRows = (evidenceRows.push({ key: { text: e.key }, value: { text: e.value } }), evidenceRows) %}
+        {% endfor %}
+        {{ govukSummaryList({ rows: evidenceRows }) }}
+      {% else %}
+        <p class="govuk-body">No evidence recorded for this finding.</p>
+      {% endif %}
+
+      <h2 class="govuk-heading-m">Thresholds used</h2>
+      {% if finding.thresholdsUsed.length %}
+        {% set thresholdRows = [] %}
+        {% for t in finding.thresholdsUsed %}
+          {% set thresholdRows = (thresholdRows.push({ key: { text: t.key }, value: { text: t.value } }), thresholdRows) %}
+        {% endfor %}
+        {{ govukSummaryList({ rows: thresholdRows }) }}
+      {% else %}
+        <p class="govuk-body">No thresholds recorded for this finding.</p>
+      {% endif %}
+    </div>
+  </div>
+{% endblock %}
