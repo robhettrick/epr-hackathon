@@ -1,0 +1,38 @@
+{#
+  home.njk — the overview / landing page (GET /).
+
+  For this increment its job is to prove the boot worked: ingest ran (loads +
+  operators) and the engine fanned out (detectors + surfaced findings), all from
+  the in-memory read model with no database. The per-detector list, finding detail
+  and live-threshold pages are added in their own plan items.
+#}
+{% extends "layout.njk" %}
+
+{% from "govuk/components/summary-list/macro.njk" import govukSummaryList %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <h1 class="govuk-heading-xl">Spot the Anomaly</h1>
+      <p class="govuk-body-l">
+        Anomaly detection over EPR packaging-waste export submissions, for a
+        regulator to triage.
+      </p>
+
+      <h2 class="govuk-heading-m">This run</h2>
+      {{ govukSummaryList({
+        rows: [
+          { key: { text: "Loads ingested" }, value: { text: summary.loads } },
+          { key: { text: "Operator submissions" }, value: { text: summary.operators } },
+          { key: { text: "Detectors run" }, value: { text: summary.detectors } },
+          { key: { text: "Findings surfaced" }, value: { text: summary.findings } }
+        ]
+      }) }}
+
+      <p class="govuk-body">
+        These figures come from the fixtures ingested at boot and a single engine
+        run held in memory — the demo runs database-free.
+      </p>
+    </div>
+  </div>
+{% endblock %}

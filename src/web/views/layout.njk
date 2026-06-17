@@ -1,0 +1,34 @@
+{#
+  layout.njk — the base govuk-frontend layout every page extends (ADR-001).
+
+  Extends the govuk-frontend base template (resolved from the package's dist/ via
+  the Nunjucks search path set in server.js) so we get the GOV.UK crown header,
+  service navigation, footer and the `govuk-template` scaffolding for free.
+
+  - Pulls in the compiled govuk stylesheet served by inert at /govuk/.
+  - `pageTitle` (set by each page) is suffixed with the service name.
+  - `content` is the per-page block; pages `{% extends "layout.njk" %}`.
+  - The govuk JS bundle is loaded at the end and initialised; the golden path is
+    fully server-rendered, so JS only progressively enhances (no client state).
+#}
+{% extends "govuk/template.njk" %}
+
+{% block pageTitle %}{{ (pageTitle + " — ") if pageTitle }}Spot the Anomaly — GOV.UK{% endblock %}
+
+{% block head %}
+  <link rel="stylesheet" href="/govuk/govuk-frontend.min.css">
+{% endblock %}
+
+{% block beforeContent %}
+  {% block breadcrumbs %}{% endblock %}
+{% endblock %}
+
+{% block content %}{% endblock %}
+
+{% block bodyEnd %}
+  <script type="module" src="/govuk/all.bundle.mjs"></script>
+  <script type="module">
+    import { initAll } from '/govuk/all.bundle.mjs';
+    initAll();
+  </script>
+{% endblock %}

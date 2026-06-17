@@ -168,13 +168,19 @@ fail on network/keys. The LLM never decides — detectors decide.
 - [ ] LLM reasons are cached; pulling the network does not break the demo.
 
 ## 9. Data / fixtures plan
-- Use the real exporter file + **2 synthesised operator files** that deliberately **share some
-  suppliers, customers and vehicles** (to trip the network detectors) and include a **prior-year
-  slice** (for YoY).
-- Seed ~1 clear anomaly per ★ detector so each list has an obvious top hit.
+- **Curated demo set: `fixtures/demo/` (already built — point the smoke test here).** Two small
+  operator files (`demo_exporter_AL.xlsx`, `demo_exporter_FB.xlsx`, 50 loads each) with realistic
+  chain tonnages and one seeded anomaly cluster per ★ detector, incl. a **shared supplier +
+  vehicle across both operators** for the network detector. Expected per-detector counts are
+  documented in `fixtures/demo/README.md` — assert them in the smoke test (ewc 5, chain 8, etc.).
+- The full real submissions in `fixtures/*.xlsx` (1,000 loads each) are kept for scale; note their
+  `exported`/`received-by-OSR` columns are synthetic, so `chain-mass-balance` floods on the osr
+  leg there — demo on `fixtures/demo/`, not the raw files.
 - Keep schema identical to the real template; reference lists from `Sheet1`.
 - No labels exist (the board's "don't have data for frequency of anomaly") → detectors are
   rule/profile/statistical, **not** trained classifiers.
+- **Entity back-refs (`operatorIds`, `loadIndexes`) are `Set`s** — the network detector must use
+  `.size`, not `.length`.
 
 ## 10. Demo script (~2 min)
 "Two operators' submissions go in — an aluminium exporter and a fibre-based-composite exporter"
