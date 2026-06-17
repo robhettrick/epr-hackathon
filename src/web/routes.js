@@ -14,6 +14,22 @@
  * engine's output and renders it; it never reaches back into detectors/ingest.
  */
 
+const Boom = require('@hapi/boom');
+
+const { triage } = require('../engine/triage');
+
+/**
+ * Severity → govuk tag modifier class. Severity is a *tag* on each finding (PRD
+ * §5.3), not the sort key, so it is shown as a coloured govuk tag while `score`
+ * drives the ranking. Higher severity = hotter colour.
+ */
+const SEVERITY_TAG = Object.freeze({
+  critical: 'govuk-tag--red',
+  high: 'govuk-tag--orange',
+  medium: 'govuk-tag--yellow',
+  low: 'govuk-tag--grey',
+});
+
 /**
  * Boot-overview figures for the landing page. Counts only **surfaced** detectors
  * and their findings — shadow detectors run but never surface in the UI/counts
@@ -47,6 +63,55 @@ function buildDetectorList(result) {
 }
 
 /**
+ * The per-detector findings view (golden-path steps 3–4): one detector's findings
+ * ranked highest score first, each row carrying the subject, its severity tag, the
+ * score, and a link into the finding detail page (the detail route lands next).
+ *
+ * Ranking + surfacing is delegated to the engine's pure `triage` (re-run per
+ * request, ADR-009): this item ships the default (surface-everything, ranked)
+ * view; the live-threshold item overlays request query params onto `options`.
+ *
+ * Returns `null` for an unknown OR shadow detector (not in the surfaced set) so the
+ * route can answer 404 rather than render an empty page (ADR-008).
+ *
+ * `findingId` is the finding's `subject.id` — unique within a single detector (one
+ * finding per load index / per entity), and stable regardless of triage order, so
+ * the detail route can resolve a finding by it without depending on the ranking.
+ *
+ * @param {object} result the engine result (`{ detectors, byDetector }`).
+ * @param {string} detectorId the requested detector id.
+ * @param {object} [options] triage thresholds (defaults surface everything).
+ * @returns {object|null} the view model, or null if the detector isn't surfaced.
+ */
+function buildDetectorView(result, detectorId, options = {}) {
+  const record = result.detectors.find((d) => d.id === detectorId && d.surfaced);
+  if (!record) return null;
+
+  const findings = result.byDetector[detectorId] || [];
+  const triaged = triage(findings, options);
+
+  const rows = triaged.surfaced.map((f) => ({
+    findingId: f.subject.id,
+    label: f.subject.label || String(f.subject.id),
+    subjectType: f.subject.type,
+    score: f.score,
+    severity: f.severity,
+    severityTag: SEVERITY_TAG[f.severity] || 'govuk-tag--grey',
+    href: `/detectors/${encodeURIComponent(detectorId)}/findings/${encodeURIComponent(f.subject.id)}`,
+  }));
+
+  return {
+    id: record.id,
+    title: record.title,
+    scope: record.scope,
+    total: triaged.total,
+    surfacedCount: triaged.surfacedCount,
+    hiddenCount: triaged.hiddenCount,
+    rows,
+  };
+}
+
+/**
  * Register the page routes against the wired server, closing over the in-memory
  * read model so each handler is a synchronous render with no I/O.
  *
@@ -70,6 +135,21 @@ function registerPageRoutes(server, { data, result }) {
     path: '/detectors',
     handler: (request, h) => h.view('detectors', { pageTitle: 'Detectors', detectors }),
   });
+
+  // Golden-path steps 3–4: one detector's findings, ranked highest score first,
+  // each linking to its detail page. Unknown/shadow detector → 404 (defensive; the
+  // list above only links surfaced detectors).
+  server.route({
+    method: 'GET',
+    path: '/detectors/{id}',
+    handler: (request, h) => {
+      const detector = buildDetectorView(result, request.params.id);
+      if (!detector) return Boom.notFound(`Unknown detector "${request.params.id}"`);
+      return h.view('detector', { pageTitle: detector.title, detector });
+    },
+  });
 }
 
-module.exports = { registerPageRoutes, buildSummary, buildDetectorList };
+module.exports = {
+  registerPageRoutes, buildSummary, buildDetectorList, buildDetectorView,
+};

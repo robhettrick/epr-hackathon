@@ -1,0 +1,54 @@
+{#
+  detector.njk — the per-detector findings list (golden-path steps 3–4,
+  GET /detectors/{id}).
+
+  One detector's findings as its OWN scored, triaged list (PRD §4/§5): ranked
+  highest score first, each row showing the subject, a severity tag and the score,
+  and linking into the finding detail page (the figures that tripped it). Severity
+  is a coloured tag, not the sort order — `score` ranks the list (PRD §5.3).
+#}
+{% extends "layout.njk" %}
+
+{% from "govuk/components/table/macro.njk" import govukTable %}
+{% from "govuk/components/tag/macro.njk" import govukTag %}
+{% from "govuk/components/back-link/macro.njk" import govukBackLink %}
+
+{% block beforeContent %}
+  {{ govukBackLink({ text: "Back to detectors", href: "/detectors" }) }}
+{% endblock %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-full">
+      <span class="govuk-caption-xl">Detector</span>
+      <h1 class="govuk-heading-xl">{{ detector.title }}</h1>
+      <p class="govuk-body-l">
+        Findings ranked by score, highest first. Showing
+        {{ detector.surfacedCount }} of {{ detector.total }}
+        {{ "finding" if detector.total == 1 else "findings" }}
+        (subject: {{ detector.scope }}).
+      </p>
+
+      {% set rows = [] %}
+      {% for r in detector.rows %}
+        {% set rows = (rows.push([
+          { html: '<a class="govuk-link" href="' + r.href + '">' + (r.label | escape) + '</a>' },
+          { html: govukTag({ text: r.severity, classes: r.severityTag }) },
+          { text: r.score, format: "numeric" }
+        ]), rows) %}
+      {% endfor %}
+
+      {{ govukTable({
+        caption: "Ranked findings",
+        captionClasses: "govuk-table__caption--m",
+        firstCellIsHeader: false,
+        head: [
+          { text: "Subject" },
+          { text: "Severity" },
+          { text: "Score", format: "numeric" }
+        ],
+        rows: rows
+      }) }}
+    </div>
+  </div>
+{% endblock %}
