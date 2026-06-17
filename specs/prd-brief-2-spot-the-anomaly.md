@@ -197,3 +197,30 @@ shadow-mode toggle to show `shadow → live` promotion; export a flagged-cases C
   generated; build fixtures with *deliberate* anomalies, don't rely on artifacts.
 - **LLM determinism** — cache + stub; never let a live call gate the demo.
 - **Ingestion fragility** — one malformed row must not kill a run.
+
+## 13. UI & GOV.UK Design System (GDS) compliance
+Build the UI from **GOV.UK Frontend** (`govuk-frontend`) components and patterns — do **not**
+hand-roll HTML/CSS that merely looks GDS-ish. Render with Nunjucks macros via `@hapi/vision`;
+serve the package's assets (CSS, GDS Transport font, images) via `@hapi/inert`.
+
+Use the GOV.UK **page template** (skip link, header, width container, footer) and a **phase
+banner** ("Prototype — sample data, not real submissions"). Screen → component mapping:
+- **Header:** GOV.UK header with service name "Spot the Anomaly".
+- **Detector list:** a table (or task-list) with a govuk **Tag** per detector for its finding
+  count / top severity.
+- **Findings list (per detector):** govuk **Table**, one row per finding, a **Tag** for severity,
+  ranked by score; columns for subject + reason snippet.
+- **Finding detail:** govuk **Summary list** for the evidence fields, **Inset text** for the
+  reason code, **Back link** to the list.
+- **Threshold control:** govuk form input/select (or labelled range) submitted via **GET** so the
+  list re-renders server-side (ADR-009).
+
+**Accessibility (in scope, lightweight):** GOV.UK Frontend components are built and tested to
+public-sector accessibility standards (WCAG 2.x AA) — inherit that by using them as documented:
+semantic markup, one `<h1>` per page, labelled form controls, the **error summary** pattern if
+validation is added. **Never signal severity by colour alone** — pair each Tag colour with its
+text label (GDS guidance). Suggested severity → Tag colour: low = grey, medium = blue,
+high = yellow, critical = red.
+
+**Out of scope for the demo:** a full WCAG 2.2 AA audit, assistive-tech testing, and the GDS
+service assessment — these are "later".

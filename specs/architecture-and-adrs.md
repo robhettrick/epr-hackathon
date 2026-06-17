@@ -178,6 +178,21 @@ input.
 **Consequences:** Golden path stays offline/deterministic; enrichment is additive, not load-bearing.
 **Alternatives:** Direct API calls inline (rejected — couples the demo to the network).
 
+### ADR-011 — UI built from GOV.UK Frontend; component/visual compliance in scope, full WCAG audit deferred
+**Accepted.**
+**Context:** Defra/regulator audience — GDS look-and-feel is a credibility and consistency
+requirement; formal accessibility assurance is a programme activity, not a 4-hour task. The spec
+previously said only "use govuk-frontend", too vague to build against.
+**Decision:** Build the UI from **`govuk-frontend`** components and patterns (Nunjucks macros via
+`@hapi/vision`; assets via `@hapi/inert`): the page template, phase banner, and the component set
+in **PRD §13**. "Compliant" for the demo = correct use of GOV.UK components/patterns and their
+built-in accessibility (semantic markup, labelled controls, no colour-only signalling) — **not** a
+formal WCAG 2.2 AA audit or GDS service assessment, which are deferred to "later".
+**Consequences:** Instant credibility; inherits component-level accessibility; no bespoke CSS;
+honest, bounded definition of "compliant" for the timebox.
+**Alternatives:** Hand-rolled CSS / Tailwind (rejected — off-brand, re-implements solved a11y);
+GOV.UK Prototype Kit (faster GDS scaffold but Express-based — conflicts with ADR-001's Hapi).
+
 ---
 
 ## 3. Cross-cutting constraints (NFRs)
