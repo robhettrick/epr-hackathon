@@ -1,5 +1,6 @@
 {
   "chain-mass-balance": {
-    "tolerance": 0.01
+    "tolerance": 0.01,
+    "baseScore": 70
   }
 }
