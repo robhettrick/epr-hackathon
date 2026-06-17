@@ -48,11 +48,14 @@ regulator to investigate.
 The demo script (PRD §10) runs start to finish without a manual fix, on the fixtures, DB-free.
 
 ## Data
-- Fixtures in `fixtures/` — ≥2 operator submissions that deliberately share some
-  suppliers/customers/vehicles, plus a prior-year slice (PRD §9).
+- Fixtures in `fixtures/` — two real submissions: an **Aluminium** operator
+  (`...AL...-b3c87758.xlsx`, a re-submission) and a **Fibre-based composite** operator
+  (`...FB...xlsx`). See `fixtures/README.md`. Two materials → the material-profile detector must
+  key on material, not assume aluminium.
+- Network detectors need a **seeded shared entity** (supplier/vehicle) across files — synthetic
+  data won't overlap naturally (see `fixtures/README.md`).
 - Reference lists in `reference/allowed-codes.json` (valid EWC codes + materials, from the
-  template's `Sheet1`).
-- If these are missing, generate them before relying on ingestion.
+  template's `Sheet1`) — **still to generate**.
 
 ## Reference (context, NOT specs — read for detail, don't treat as scope)
 - `docs/anomaly-scenarios-from-sample.md` — exact field→detector mappings, real counts, reason codes
