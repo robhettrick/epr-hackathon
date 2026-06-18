@@ -28,7 +28,7 @@
  */
 
 const Path = require('path');
-const { test, before } = require('node:test');
+const { test, describe, before } = require('node:test');
 const assert = require('node:assert/strict');
 
 const { ingest } = require('../src/ingest');
@@ -128,6 +128,9 @@ const EXPECTED = [
 let result;
 let data;
 
+// Wrapped in a describe so the async `before` reliably runs before the tests on
+// every Node version (a top-level `before` + top-level `test` is racy on Node 20).
+describe('golden path (end-to-end)', () => {
 before(async () => {
   // Register every detector the same way the server boots (directory scan →
   // self-register, ADR-004), so the fan-out covers exactly the demo's registry.
@@ -191,3 +194,4 @@ for (const expected of EXPECTED) {
     expected.topMatches(top);
   });
 }
+});
