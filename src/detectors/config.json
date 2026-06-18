@@ -7,5 +7,9 @@
     "tolerance": 0.05,
     "baseScore": 60,
     "highDeviation": 0.5
+  },
+  "destination-plausibility": {
+    "baseScore": 70,
+    "concentrationTonnage": 500
   }
 }

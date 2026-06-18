@@ -1,0 +1,47 @@
+{
+  "_comment": "Reviewed (ADR-007) lists of overseas destinations with NO known reprocessing capacity for a given UK packaging-waste material family. A load whose OSR_COUNTRY (column BJ, `osrCountry`) is on its material family's list is an implausible, Basel-relevant destination (docs/anomaly-scenarios-from-sample.md E2). Keyed on the NORMALISED material family — the part of DESCRIPTION_WASTE (column I) before the ' - ' grade separator, or the Cover `material` — so the check is per-material and never hard-coded to aluminium. `families` entries are authoritative for that family; `default` applies to any family with no specific entry. Country strings are matched case/format-insensitively (normalised like the country entity key), so 'Tuvalu-TV' matches 'tuvalu-tv'. Add a destination here only after reviewing that the country lacks reprocessing infrastructure for the material (OECD/Basel cross-reference).",
+  "default": {
+    "implausible": [
+      "Tuvalu-TV",
+      "Nauru-NR",
+      "Kiribati-KI",
+      "Samoa-WS",
+      "Lesotho-LS",
+      "Djibouti-DJ",
+      "Haiti-HT",
+      "Yemen-YE",
+      "Marshall Islands-MH",
+      "Tonga-TO"
+    ]
+  },
+  "families": {
+    "aluminium": {
+      "implausible": [
+        "Tuvalu-TV",
+        "Nauru-NR",
+        "Kiribati-KI",
+        "Samoa-WS",
+        "Lesotho-LS",
+        "Djibouti-DJ",
+        "Haiti-HT",
+        "Yemen-YE",
+        "Marshall Islands-MH",
+        "Tonga-TO"
+      ]
+    },
+    "fibre based composite": {
+      "implausible": [
+        "Tuvalu-TV",
+        "Nauru-NR",
+        "Kiribati-KI",
+        "Samoa-WS",
+        "Lesotho-LS",
+        "Djibouti-DJ",
+        "Haiti-HT",
+        "Yemen-YE",
+        "Marshall Islands-MH",
+        "Tonga-TO"
+      ]
+    }
+  }
+}
