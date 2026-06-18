@@ -21,6 +21,10 @@
         regulator to investigate. Select a detector to see its ranked findings.
       </p>
 
+      <p class="govuk-body">
+        <a class="govuk-link" href="/export.csv" download>Download all flagged cases (CSV)</a>
+      </p>
+
       {% set rows = [] %}
       {% for d in detectors %}
         {% set rows = (rows.push([

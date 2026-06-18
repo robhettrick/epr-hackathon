@@ -18,6 +18,7 @@ const Boom = require('@hapi/boom');
 
 const { triage } = require('../engine/triage');
 const { SEVERITIES } = require('../model/finding');
+const { toCsv } = require('./csv');
 
 /**
  * Severity → govuk tag modifier class. Severity is a *tag* on each finding (PRD
@@ -109,6 +110,9 @@ function buildDetectorView(result, detectorId, options = {}) {
     title: record.title,
     scope: record.scope,
     href: `/detectors/${encodeURIComponent(detectorId)}`,
+    // The CSV download link carries the currently-applied thresholds so "download
+    // these results" exports exactly the filtered list on screen (PRD §11 stretch).
+    exportHref: `/detectors/${encodeURIComponent(detectorId)}/export.csv${thresholdsQuery(triaged.thresholds)}`,
     total: triaged.total,
     surfacedCount: triaged.surfacedCount,
     hiddenCount: triaged.hiddenCount,
@@ -224,6 +228,109 @@ function buildFindingView(result, detectorId, findingId) {
 }
 
 /**
+ * Columns of the flagged-cases CSV (PRD §11 stretch). One row per surfaced
+ * finding, carrying the subject, the score/severity a regulator triages on, the
+ * plain-English reason and the flattened evidence/thresholds that tripped it, plus
+ * the reproducibility stamp (ADR-008: detector version, config hash, snapshot id,
+ * run timestamp) so an exported case is auditable back to the exact inputs+logic.
+ */
+const FINDING_CSV_COLUMNS = Object.freeze([
+  { key: 'detector', header: 'Detector' },
+  { key: 'detectorId', header: 'Detector ID' },
+  { key: 'subjectType', header: 'Subject type' },
+  { key: 'subjectId', header: 'Subject ID' },
+  { key: 'subjectLabel', header: 'Subject' },
+  { key: 'score', header: 'Score' },
+  { key: 'severity', header: 'Severity' },
+  { key: 'reason', header: 'Reason' },
+  { key: 'evidence', header: 'Evidence' },
+  { key: 'thresholdsUsed', header: 'Thresholds used' },
+  { key: 'detectorVersion', header: 'Detector version' },
+  { key: 'configHash', header: 'Config hash' },
+  { key: 'snapshotId', header: 'Snapshot ID' },
+  { key: 'runTimestamp', header: 'Run timestamp' },
+]);
+
+/** Build the `?minScore=…&minSeverity=…&limit=…` suffix from resolved triage
+ * thresholds, omitting the no-op defaults (score 0 / no gate / no cap), so a
+ * download link reproduces exactly the filter applied to the on-screen list. */
+function thresholdsQuery(thresholds) {
+  const params = [];
+  if (thresholds.minScore) params.push(`minScore=${encodeURIComponent(thresholds.minScore)}`);
+  if (thresholds.minSeverity) params.push(`minSeverity=${encodeURIComponent(thresholds.minSeverity)}`);
+  if (thresholds.limit) params.push(`limit=${encodeURIComponent(thresholds.limit)}`);
+  return params.length ? `?${params.join('&')}` : '';
+}
+
+/**
+ * Flatten one finding into a CSV record (the `FINDING_CSV_COLUMNS` shape). The
+ * detector title/scope come from its run record (a finding carries only its id);
+ * the detector-specific `evidence`/`thresholdsUsed` are flattened with the same
+ * `describeValue` the detail view uses, so the CSV and the HTML stay consistent
+ * with no per-detector branching (ADR-004). The reproducibility stamp is read off
+ * the finding's `runMeta` (ADR-008).
+ */
+function findingToCsvRow(finding, record) {
+  const runMeta = finding.runMeta || {};
+  return {
+    detector: record.title,
+    detectorId: finding.detectorId,
+    subjectType: finding.subject.type,
+    subjectId: finding.subject.id,
+    subjectLabel: finding.subject.label || '',
+    score: finding.score,
+    severity: finding.severity,
+    reason: finding.reason,
+    evidence: describeValue(finding.evidence),
+    thresholdsUsed: describeValue(finding.thresholdsUsed),
+    detectorVersion: runMeta.detectorVersion,
+    configHash: runMeta.configHash,
+    snapshotId: runMeta.snapshotId,
+    runTimestamp: runMeta.timestamp,
+  };
+}
+
+/**
+ * The consolidated flagged-cases export: every SURFACED detector's surfaced
+ * findings, in registration order then score-desc within each detector. Shadow
+ * detectors are excluded (ADR-008), exactly as in the UI counts. `options` (the
+ * request query) is overlaid on every detector's triage so an export can be
+ * threshold-filtered uniformly, the same seam the per-detector list uses.
+ *
+ * @param {object} result the engine result (`{ detectors, byDetector }`).
+ * @param {object} [options] triage thresholds (typically `request.query`).
+ * @returns {object[]} flat CSV records for `FINDING_CSV_COLUMNS`.
+ */
+function buildExportRows(result, options = {}) {
+  const rows = [];
+  for (const record of result.detectors) {
+    if (!record.surfaced) continue;
+    const findings = result.byDetector[record.id] || [];
+    for (const finding of triage(findings, options).surfaced) {
+      rows.push(findingToCsvRow(finding, record));
+    }
+  }
+  return rows;
+}
+
+/**
+ * One detector's surfaced findings as CSV records, honouring the request's triage
+ * thresholds so a per-detector download matches the filtered list on screen.
+ * Returns `null` for an unknown/shadow detector so the route can answer 404.
+ *
+ * @param {object} result the engine result (`{ detectors, byDetector }`).
+ * @param {string} detectorId the requested detector id.
+ * @param {object} [options] triage thresholds (typically `request.query`).
+ * @returns {object[]|null} flat CSV records, or null if the detector isn't surfaced.
+ */
+function buildDetectorExportRows(result, detectorId, options = {}) {
+  const record = result.detectors.find((d) => d.id === detectorId && d.surfaced);
+  if (!record) return null;
+  const findings = result.byDetector[detectorId] || [];
+  return triage(findings, options).surfaced.map((f) => findingToCsvRow(f, record));
+}
+
+/**
  * Register the page routes against the wired server, closing over the in-memory
  * read model so each handler is a synchronous render with no I/O.
  *
@@ -263,6 +370,38 @@ function registerPageRoutes(server, { data, result }) {
     },
   });
 
+  // PRD §11 stretch: the consolidated flagged-cases CSV — every surfaced
+  // detector's surfaced findings, one row each. The request query is overlaid on
+  // triage so the export honours any threshold filter (same seam as the list).
+  server.route({
+    method: 'GET',
+    path: '/export.csv',
+    handler: (request, h) => {
+      const csv = toCsv(FINDING_CSV_COLUMNS, buildExportRows(result, request.query));
+      return h
+        .response(csv)
+        .type('text/csv; charset=utf-8')
+        .header('content-disposition', 'attachment; filename="flagged-cases.csv"');
+    },
+  });
+
+  // PRD §11 stretch: one detector's findings as CSV, honouring the same
+  // `minScore`/`minSeverity`/`limit` query as its HTML list so "download these
+  // results" exports exactly what's on screen. Unknown/shadow detector → 404.
+  server.route({
+    method: 'GET',
+    path: '/detectors/{id}/export.csv',
+    handler: (request, h) => {
+      const rows = buildDetectorExportRows(result, request.params.id, request.query);
+      if (!rows) return Boom.notFound(`Unknown detector "${request.params.id}"`);
+      const filename = `${request.params.id}-findings.csv`;
+      return h
+        .response(toCsv(FINDING_CSV_COLUMNS, rows))
+        .type('text/csv; charset=utf-8')
+        .header('content-disposition', `attachment; filename="${filename}"`);
+    },
+  });
+
   // Golden-path step 5: one finding's detail — reason + evidence + thresholdsUsed.
   // Resolved by detector id + finding id (subject.id) over the read model; an
   // unknown detector OR an unknown finding id → 404.
@@ -284,6 +423,9 @@ module.exports = {
   buildDetectorList,
   buildDetectorView,
   buildFindingView,
+  buildExportRows,
+  buildDetectorExportRows,
+  FINDING_CSV_COLUMNS,
   humaniseKey,
   describeValue,
 };

@@ -78,6 +78,10 @@
         <a class="govuk-link govuk-!-margin-left-3" href="{{ detector.href }}">Reset</a>
       </form>
 
+      <p class="govuk-body">
+        <a class="govuk-link" href="{{ detector.exportHref }}" download>Download these results (CSV)</a>
+      </p>
+
       {% set rows = [] %}
       {% for r in detector.rows %}
         {% set rows = (rows.push([
