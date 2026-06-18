@@ -2,5 +2,10 @@
   "chain-mass-balance": {
     "tolerance": 0.01,
     "baseScore": 70
+  },
+  "material-profile": {
+    "tolerance": 0.05,
+    "baseScore": 60,
+    "highDeviation": 0.5
   }
 }

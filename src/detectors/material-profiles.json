@@ -1,0 +1,9 @@
+{
+  "_comment": "Reviewed expected recyclable-proportion floors (0–1) for materials whose grade is NOT encoded as a (NN.N%) suffix in the material name. Keyed on the EXACT machine `descriptionWaste` (column I) string — including any en-dash. Materials whose name already carries a (NN.N%) grade (e.g. the three '(97.5%)' lines) need no entry here: the detector parses that suffix directly. Add a material here only after reviewing its typical declared proportion in the data (ADR-007: reviewed data tables ship as JSON).",
+  "profiles": {
+    "Fibre-based composite - drink cartons": 0.75,
+    "Fibre-based composite - cups": 0.7,
+    "Fibre-based composite - food containers": 0.72,
+    "Fibre-based composite - mixed": 0.65
+  }
+}
