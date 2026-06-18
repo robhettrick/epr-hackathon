@@ -80,7 +80,10 @@ We ran a deliberate sequence, each stage feeding the next:
 
 ## By the numbers
 
-- 37 commits, 232 passing tests, ~30 autonomous build iterations across a handful of batches.
-- A complete golden path (ingest → fan-out → ranked/triaged lists → detail → live threshold),
-  **all five ★ detectors live** plus a cached LLM explainer, `runMeta` reproducibility stamping,
-  and shadow-flag promotion — all in roughly a day.
+- 54 commits, 352 passing tests, ~40 autonomous build iterations across several reviewed batches.
+- A complete golden path (ingest → fan-out → ranked/triaged lists → detail → live threshold), the
+  **full 12-detector suite** (row-level, entity/network, and cross-period), a cached LLM explainer,
+  `runMeta` reproducibility stamping, shadow-flag promotion, a **combined per-subject aggregate
+  score**, and **CSV export** — built across two days.
+- The whole implementation plan is delivered bar three items deliberately deferred (Companies House
+  enrichment, PostgreSQL persistence, live LLM path) to keep the demo DB-free and deterministic.

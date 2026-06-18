@@ -54,15 +54,15 @@ being it scales from the demo to the regulator's whole population.
 
 ## What happens next
 
-The golden path and the headline detectors work today. To take it further:
+The golden path and the **full 12-detector suite** work today — row-level checks, cross-operator
+network detectors, and a cross-period year-on-year swing — plus a combined per-subject score, an
+explainer, and CSV export. To take it into a real service:
 
-- **Complete the ★ detector set** — material-profile (does the declared recyclable-% match the
-  grade?), destination-plausibility (is this a credible reprocessing country?), and the
-  cross-operator network check (one supplier feeding many operators) — plus an LLM that writes the
-  investigator-facing reasons.
 - **Cross-reference external data** — Companies House for overdue filings, dissolved-but-trading
   entities, and shared directors (a free, high-value signal).
 - **Close the loop** — let analysts confirm/dismiss findings and feed that back to tune thresholds
   (the persistence path is designed in, off by default).
+- **Turn on the live LLM explainer** — currently runs from a deterministic cache; the live path is
+  built behind a flag.
 - **Run it on real submissions at scale**, and complete a formal GOV.UK accessibility assessment
   before any live use.

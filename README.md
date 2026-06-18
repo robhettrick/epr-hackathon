@@ -12,7 +12,7 @@ Built for the Defra EPR hackathon (Brief 2). Node.js 20 · Hapi · GOV.UK Fronte
 ```bash
 npm install
 npm run dev        # http://localhost:3000  (boots on the curated demo fixtures, ~2s)
-npm test           # 232 tests (node:test)
+npm test           # 352 tests (node:test)
 ```
 
 - `npm run dev` loads the **curated demo set** (`fixtures/demo/`, 100 loads, fast, legible).
@@ -75,20 +75,26 @@ module.exports = register(MyDetector);
 Drop the file in `src/detectors/` — `server.js` scans and imports the folder at boot, so there's
 no wiring to change.
 
-### Detectors — all five ★ are live
+### Detectors — 12 live
 
-- `ewc-not-packaging` — EWC not a `15 01 xx` packaging code / off-list / hazardous
-- `chain-mass-balance` — received ≥ exported ≥ received-by-OSR must reconcile
-- `material-profile` — declared recyclable-% vs the material grade (keyed on material)
-- `destination-plausibility` — implausible reprocessing destinations (country-scoped)
-- `single-supplier→many-operators` — one supplier spanning multiple operators (network)
+Row-level: `ewc-not-packaging`, `chain-mass-balance`, `temporal-logic`, `material-profile`,
+`arithmetic-integrity`, `vehicle-plate-format`.
+Entity-level: `destination-plausibility`, `osr-refusal-rate`, `single-supplier→many-operators`,
+`single-customer←many-operators`, `shared-vehicle-across-operators`.
+Cross-period: `year-on-year-swing`.
 
-A **cached LLM explainer** (`src/explain/`) writes each finding's investigator-facing reason,
-behind a flag that is **off by default** (per-detector stubs are used otherwise, keeping the demo
-deterministic). Every finding is stamped with `runMeta` (detector + config version, data snapshot)
-for reproducibility, and detectors carry a `shadow` flag for safe `shadow → live` promotion.
-Further detectors (temporal, vehicle, refusal-rate, year-on-year, Companies House) are backlogged
-in `IMPLEMENTATION_PLAN.md`.
+Each emits its own ranked, severity-tagged list. A **cached LLM explainer** (`src/explain/`) writes
+each finding's investigator-facing reason, behind a flag that is **off by default** (per-detector
+stubs otherwise, keeping the demo deterministic). Every finding is stamped with `runMeta` (detector
++ config version, data snapshot) for reproducibility, and detectors carry a `shadow` flag for safe
+`shadow → live` promotion.
+
+Beyond the per-detector lists: a **combined per-subject aggregate score** (`src/engine/aggregate.js`)
+fuses corroborating signals across detectors, and findings **export to CSV** (`/export.csv`, or
+per-detector, honouring the active threshold filter).
+
+Deferred by design (not built): Companies House enrichment, PostgreSQL persistence, and the live
+LLM path — see `IMPLEMENTATION_PLAN.md`.
 
 ## Data
 
@@ -110,6 +116,6 @@ fixtures/ reference/
 
 ## Tests
 
-`npm test` runs 232 tests (`node:test`), including `test/golden-path.test.js` — an end-to-end
+`npm test` runs 352 tests (`node:test`), including `test/golden-path.test.js` — an end-to-end
 smoke test that ingests the demo fixtures, runs the engine, and asserts **all five** ★ detectors'
 top finding is their seeded headline anomaly.
