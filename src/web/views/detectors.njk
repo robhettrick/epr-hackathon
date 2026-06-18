@@ -32,8 +32,8 @@
       {% set rows = [] %}
       {% for d in detectors %}
         {% set rows = (rows.push([
-          { html: '<a class="govuk-link" href="' + d.href + '">' + d.title + '</a>'
-                  + ('<span class="govuk-hint govuk-!-margin-top-1 govuk-!-margin-bottom-0">' + (d.description | escape) + '</span>' if d.description else '') },
+          { html: '<a class="govuk-link govuk-!-font-weight-bold" href="' + d.href + '">' + d.title + '</a>'
+                  + ('<div class="govuk-hint govuk-!-margin-top-1 govuk-!-margin-bottom-0">' + (d.description | escape) + '</div>' if d.description else '') },
           { text: d.scope },
           { text: d.count, format: "numeric" }
         ]), rows) %}
