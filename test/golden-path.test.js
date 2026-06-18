@@ -20,10 +20,11 @@
  * Determinism (CLAUDE.md): fixed fixture order, no live network, no DB. The same
  * run always yields the same per-detector lists.
  *
- * Only the two ★ detectors built so far are asserted here; the remaining three
- * (`material-profile`, `destination-plausibility`, `single-supplier→many-operators`)
- * are added to EXPECTED by the dedicated "extend the smoke test" plan item once
- * each detector lands.
+ * All five ★ detectors (PRD §6) are now asserted here — `ewc-not-packaging`,
+ * `chain-mass-balance`, `material-profile`, `destination-plausibility`, and
+ * `single-supplier→many-operators` — each with its seeded headline anomaly as the
+ * top finding. The shared-supplier seed is baked into the demo files (the network
+ * detector fires without the ingest-time overlay; see `fixtures/demo/README.md`).
  */
 
 const Path = require('path');
@@ -71,6 +72,55 @@ const EXPECTED = [
       for (const k of ['recv', 'exp', 'osr']) {
         assert.ok(k in top.evidence, `evidence carries the ${k} tonnage`);
       }
+    },
+  },
+  {
+    id: 'material-profile',
+    count: 3, // 2 AAIG cans (97.5%) + 1 fibre drink-cartons row under-declaring recyclable %
+    topMatches(top) {
+      // The biggest grade shortfall ranks first: a 97.5% AAIG-cans load declaring 0.35.
+      assert.equal(top.subject.type, 'load', 'material-profile is load-scoped');
+      assert.equal(top.severity, 'high', 'a >0.5 shortfall is a high-severity mismatch');
+      assert.match(
+        top.evidence.material,
+        /97\.5%/,
+        'top hit is the 97.5%-grade aluminium-cans material',
+      );
+      // Expected grade comes from the material name itself (keyed on material, not
+      // a hard-coded substance) and the load under-declares well below it.
+      assert.equal(top.evidence.source, 'grade-suffix', 'expected grade parsed from the name suffix');
+      assert.ok(
+        top.evidence.declaredRecyclable < top.evidence.expectedRecyclable,
+        'the load declares below the grade implied by its material',
+      );
+    },
+  },
+  {
+    id: 'destination-plausibility',
+    count: 3, // Tuvalu-TV, Nauru-NR (AL) + Lesotho-LS (FB) — destinations with no reprocessing capacity
+    topMatches(top) {
+      // Findings aggregate per destination country and rank by tonnage concentration,
+      // so the highest-tonnage implausible destination (Nauru-NR, aluminium) tops the list.
+      assert.equal(top.subject.type, 'country', 'destination-plausibility is country-scoped');
+      assert.equal(top.severity, 'high', 'an incapable destination is high severity');
+      assert.equal(top.evidence.country, 'Nauru-NR', 'highest-tonnage implausible destination ranks first');
+      assert.deepEqual(top.evidence.materials, ['Aluminium'], 'flagged for the aluminium it cannot reprocess');
+      assert.ok(top.evidence.tonnage > 0, 'evidence carries the concentrated tonnage');
+    },
+  },
+  {
+    id: 'single-supplier-many-operators',
+    count: 1, // the one seeded supplier feeding both operators across the two files
+    topMatches(top) {
+      // This is the acceptance criterion "at least one detector spans multiple operators".
+      assert.equal(top.subject.type, 'supplier', 'single-supplier→many-operators is supplier-scoped');
+      assert.equal(top.subject.label, 'Shared Metals Recovery Ltd', 'the seeded shared supplier');
+      assert.equal(top.evidence.operatorCount, 2, 'one supplier feeds two distinct operators');
+      assert.deepEqual(
+        [...top.evidence.operatorIds].sort(),
+        ['E-ACC10001AL', 'E-ACC10002FB'],
+        'the span covers both demo operators (≥2 files)',
+      );
     },
   },
 ];
