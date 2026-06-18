@@ -26,6 +26,21 @@ regulator to investigate.
   is fine.
 - **Small, atomic commits** (one concern each — the `/commit` skill enforces this).
 
+## Completion-pass scope (current)
+Build the remaining **detectors** — `temporal-logic`, `arithmetic-integrity`,
+`vehicle-plate-format`, `osr-refusal-rate`, `single-customer←many-operators`,
+`shared-vehicle-across-operators`, `year-on-year-swing` — plus the cheap non-detector items:
+**combined per-subject aggregate score**, **CSV export**, and the **weight-column/model
+extension** that `arithmetic-integrity` needs (map `GROSS_WEIGHT`/`TARE_WEIGHT`/`PALLET_WEIGHT`/
+`WEIGHT_OF_NON_TARGET_MATERIALS` in `column-map.js` + `load.js`). Demo data for every new detector
+is already seeded in `fixtures/demo/` — see `fixtures/demo/README.md` for the manifest and the
+expected counts to assert.
+
+**Do NOT build (deferred — out of scope this pass):** Companies House enrichment, PostgreSQL
+persistence, and the live LLM explainer path. Skip these and pick the next in-scope item.
+Network detectors use entity `Set`s — test `.size`, not `.length`. Keep the five ★ counts
+(ewc 5 / chain 8 / material 3 / destination 3 / single-supplier 1) unchanged.
+
 ## Tech defaults (per ADRs — don't deviate without reason)
 - **Node.js 20**, single **Hapi** monolith: `@hapi/hapi` + `@hapi/vision` (Nunjucks views) +
   `@hapi/inert` (static), rendering **govuk-frontend** server-side. No SPA, no client state.

@@ -27,15 +27,30 @@ Verified by running the current detectors over both files via `ingest()`:
 | `single-supplier→many-operators` *(when built)* | **1** | "Shared Metals Recovery Ltd" (postcode `LS1 4AB`) across both operators — 7 loads (4 AL + 3 FB) |
 | `material-profile` *(when built)* | **3** | "AAIG cans (97.5%)" / "drink cartons" rows declaring recyclable 0.30–0.35 |
 | `destination-plausibility` *(when built)* | **3** | Tuvalu-TV, Nauru-NR (AL), Lesotho-LS (FB) |
-| `temporal-logic` *(later)* | **1** | one AL load exported before it was received |
-| `osr-refusal-rate` *(later)* | 3 refused loads | AL ×2, FB ×1 |
-| `shared-vehicle-across-operators` *(later)* | **1** | reg `SH24RED` across both operators (4 loads) |
+| `temporal-logic` *(seeded)* | **1** | one AL load exported before it was received |
+| `shared-vehicle-across-operators` *(seeded)* | **1** | reg `SH24RED` across both operators (4 loads) |
+| `vehicle-plate-format` *(seeded)* | **1** | one AL load with reg `NOTAPLATE` (not a valid UK plate) |
+| `single-customer←many-operators` *(seeded)* | **1** | OSR "Global Reprocessing Ltd" across both operators — 5 loads (3 AL + 2 FB) |
+| `osr-refusal-rate` *(seeded)* | "Global Reprocessing Ltd" elevated | that OSR has 2 of 5 loads refused (40%); other refused loads sit on single-load OSRs |
+| `arithmetic-integrity` *(seeded)* | **1** | one AL load whose `NET_WEIGHT` ≠ `GROSS − TARE − PALLET` (off by 120 t) |
+| `year-on-year-swing` *(seeded, separate file)* | swing | see prior-year slice below |
+
+## Prior-year slice (for `year-on-year-swing`)
+`demo_exporter_AL_2024.xlsx` — the **same operator** (`E-ACC10001AL`), 30 loads dated 2024 with
+tonnages ~half of 2026, so a year-on-year comparison shows a clear drop. **Not** part of the
+default demo ingest (that stays AL + FB 2026, 100 loads, so the golden-path counts above hold).
+Exercise YoY on the `{AL_2024, AL}` pair in the detector's unit test, or via a dedicated ingest.
 
 ## Notes for the build loop
-- **`operatorIds` and `loadIndexes` on entities are `Set`s, not arrays** — the
-  `single-supplier→many-operators` detector must test `entity.operatorIds.size > 1` (not
-  `.length`).
-- Seeds sit on distinct rows so each detector's list stays legible (a seeded chain row still
-  carries a valid packaging EWC, etc.).
+- **`operatorIds` and `loadIndexes` on entities are `Set`s, not arrays** — the network detectors
+  (`single-supplier→many-operators`, `single-customer←many-operators`,
+  `shared-vehicle-across-operators`) must test `.size`, not `.length`.
+- **`arithmetic-integrity` needs the model extended first.** The fixtures now carry
+  `GROSS_WEIGHT`, `TARE_WEIGHT`, `PALLET_WEIGHT`, `WEIGHT_OF_NON_TARGET_MATERIALS`, but the
+  column-map / `Load` model don't map them yet — add them to `column-map.js` + `load.js` before
+  the detector can recompute `NET = GROSS − TARE − PALLET`. (This also closes the backlog item
+  "map the interim-site flag / extra weight columns".)
+- The new seeds sit on previously-clean rows, so the five ★ detector counts (5/8/3/3/1) are
+  unchanged — keep it that way.
 - Point the golden-path smoke test at this folder, not the full fixtures, so assertions are
   small and stable.
