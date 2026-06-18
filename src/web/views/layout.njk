@@ -13,11 +13,41 @@
 #}
 {% extends "govuk/template.njk" %}
 {% from "govuk/components/phase-banner/macro.njk" import govukPhaseBanner %}
+{% from "govuk/components/header/macro.njk" import govukHeader %}
 
 {% block pageTitle %}{{ (pageTitle + " — ") if pageTitle }}Spot the Anomaly — GOV.UK{% endblock %}
 
 {% block head %}
   <link rel="stylesheet" href="/govuk/govuk-frontend.min.css">
+{% endblock %}
+
+{#
+  Render the GOV.UK header + a service-navigation bar (service name + top nav)
+  ourselves. This gives the app a service identity and primary navigation, and
+  sidesteps a v6 default-header rendering quirk that emitted duplicated attributes
+  on the service-navigation element. `navActive` is set per page.
+#}
+{% block header %}
+  {{ govukHeader({}) }}
+  <section aria-label="Service information" class="govuk-service-navigation" data-module="govuk-service-navigation">
+    <div class="govuk-width-container">
+      <div class="govuk-service-navigation__container">
+        <span class="govuk-service-navigation__service-name">
+          <a href="/" class="govuk-service-navigation__link">Spot the Anomaly</a>
+        </span>
+        <nav aria-label="Menu" class="govuk-service-navigation__wrapper">
+          <ul class="govuk-service-navigation__list" id="navigation">
+            <li class="govuk-service-navigation__item{{ ' govuk-service-navigation__item--active' if navActive == 'overview' }}">
+              <a class="govuk-service-navigation__link" href="/"{{ ' aria-current="page"' | safe if navActive == 'overview' }}>Overview</a>
+            </li>
+            <li class="govuk-service-navigation__item{{ ' govuk-service-navigation__item--active' if navActive == 'detectors' }}">
+              <a class="govuk-service-navigation__link" href="/detectors"{{ ' aria-current="page"' | safe if navActive == 'detectors' }}>Detectors</a>
+            </li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+  </section>
 {% endblock %}
 
 {% block beforeContent %}
