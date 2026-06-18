@@ -12,6 +12,7 @@
     fully server-rendered, so JS only progressively enhances (no client state).
 #}
 {% extends "govuk/template.njk" %}
+{% from "govuk/components/phase-banner/macro.njk" import govukPhaseBanner %}
 
 {% block pageTitle %}{{ (pageTitle + " — ") if pageTitle }}Spot the Anomaly — GOV.UK{% endblock %}
 
@@ -20,6 +21,10 @@
 {% endblock %}
 
 {% block beforeContent %}
+  {{ govukPhaseBanner({
+    tag: { text: "Prototype" },
+    html: 'Hackathon prototype — sample data only, not a live regulator service.'
+  }) }}
   {% block breadcrumbs %}{% endblock %}
 {% endblock %}
 
