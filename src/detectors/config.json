@@ -22,5 +22,10 @@
     "toleranceDays": 0,
     "baseScore": 80,
     "highGapDays": 30
+  },
+  "arithmetic-integrity": {
+    "tolerance": 0.5,
+    "baseScore": 70,
+    "criticalRel": 0.1
   }
 }
