@@ -75,8 +75,10 @@
             }) }}
           </div>
         </div>
-        {{ govukButton({ text: "Apply thresholds" }) }}
-        <a class="govuk-link govuk-!-margin-left-3" href="{{ detector.href }}">Reset</a>
+        <div class="govuk-button-group">
+          {{ govukButton({ text: "Apply thresholds" }) }}
+          <a class="govuk-link" href="{{ detector.href }}">Reset</a>
+        </div>
       </form>
 
       <p class="govuk-body">
