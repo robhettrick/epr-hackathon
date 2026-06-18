@@ -50,5 +50,11 @@
     "baseScore": 60,
     "saturationOperators": 5,
     "highOperators": 3
+  },
+  "year-on-year-swing": {
+    "maxRelSwing": 0.5,
+    "minTonnage": 100,
+    "baseScore": 60,
+    "highSwing": 2.0
   }
 }
