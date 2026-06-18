@@ -11,5 +11,11 @@
   "destination-plausibility": {
     "baseScore": 70,
     "concentrationTonnage": 500
+  },
+  "single-supplier-many-operators": {
+    "maxOperatorsPerSupplier": 1,
+    "baseScore": 60,
+    "saturationOperators": 5,
+    "highOperators": 3
   }
 }
