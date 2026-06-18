@@ -18,6 +18,12 @@
     "saturationOperators": 5,
     "highOperators": 3
   },
+  "single-customer-many-operators": {
+    "maxOperatorsPerCustomer": 1,
+    "baseScore": 60,
+    "saturationOperators": 5,
+    "highOperators": 3
+  },
   "temporal-logic": {
     "toleranceDays": 0,
     "baseScore": 80,
