@@ -5,5 +5,6 @@
   "destination-plausibility": "Waste of this material was declared to a destination with no known reprocessing capacity for it. Shipments to countries that lack the relevant reprocessing infrastructure are implausible and may indicate a Basel-relevant mis-declaration.",
   "single-supplier-many-operators": "This supplier feeds an unusually high number of distinct operators across the submissions. A single source spread thinly across many exporters is a pattern associated with waste-laundering or front operations and is worth a closer look.",
   "temporal-logic": "The dates along the export chain run backwards in time. Waste cannot be exported before it was received, nor received by the overseas reprocessor before it was exported; an out-of-order date is physically impossible and points to a data-integrity problem.",
+  "osr-refusal-rate": "This overseas reprocessor refused an unusually high share of the loads sent to it. A reprocessor turning away a large fraction of its consignments can indicate persistent quality problems, mis-declared material arriving on its doorstep, or paperwork that does not match the shipment, and is worth a closer look.",
   "default": "An anomaly detector flagged this subject for investigation. See the evidence for the figures that triggered the finding."
 }

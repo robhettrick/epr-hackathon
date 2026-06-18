@@ -30,5 +30,11 @@
   },
   "vehicle-plate-format": {
     "baseScore": 60
+  },
+  "osr-refusal-rate": {
+    "maxRefusalRate": 0.25,
+    "minLoads": 3,
+    "baseScore": 60,
+    "highRefusalRate": 0.5
   }
 }
