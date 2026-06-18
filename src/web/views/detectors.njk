@@ -11,6 +11,7 @@
 {% set navActive = "detectors" %}
 
 {% from "govuk/components/table/macro.njk" import govukTable %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
 
 {% block content %}
   <div class="govuk-grid-row">
@@ -21,9 +22,12 @@
         regulator to investigate. Select a detector to see its ranked findings.
       </p>
 
-      <p class="govuk-body">
-        <a class="govuk-link" href="/export.csv" download>Download all flagged cases (CSV)</a>
-      </p>
+      {{ govukButton({
+        text: "Download all flagged cases (CSV)",
+        href: "/export.csv",
+        classes: "govuk-button--secondary",
+        attributes: { download: "" }
+      }) }}
 
       {% set rows = [] %}
       {% for d in detectors %}

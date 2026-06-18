@@ -81,9 +81,12 @@
         </div>
       </form>
 
-      <p class="govuk-body">
-        <a class="govuk-link" href="{{ detector.exportHref }}" download>Download these results (CSV)</a>
-      </p>
+      {{ govukButton({
+        text: "Download these results (CSV)",
+        href: detector.exportHref,
+        classes: "govuk-button--secondary",
+        attributes: { download: "" }
+      }) }}
 
       {% set rows = [] %}
       {% for r in detector.rows %}
