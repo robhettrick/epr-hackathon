@@ -46,8 +46,9 @@ const PORT = Number(process.env.PORT) || 3000;
 const HOST = process.env.HOST || '0.0.0.0';
 
 // Default to the curated demo set (fast boot, legible seeded findings: ewc 5,
-// chain 8, shared supplier/vehicle across operators). Set FIXTURES=raw to load
-// the full 1,000-load real submissions instead (slow boot, shows scale).
+// chain 8, shared supplier/vehicle across operators, plus the AL operator's
+// 2024 prior-year slice so `year-on-year-swing` fires in the UI). Set
+// FIXTURES=raw to load the full 1,000-load real submissions instead (shows scale).
 const USE_RAW = process.env.FIXTURES === 'raw';
 const FIXTURES = USE_RAW
   ? [
@@ -57,6 +58,7 @@ const FIXTURES = USE_RAW
   : [
       Path.join(ROOT, 'fixtures', 'demo', 'demo_exporter_AL.xlsx'),
       Path.join(ROOT, 'fixtures', 'demo', 'demo_exporter_FB.xlsx'),
+      Path.join(ROOT, 'fixtures', 'demo', 'demo_exporter_AL_2024.xlsx'),
     ];
 
 // The curated demo set has the shared supplier/vehicle baked into its rows; the

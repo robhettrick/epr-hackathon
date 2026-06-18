@@ -40,6 +40,8 @@ const ROOT = Path.join(__dirname, '..');
 const DEMO_FIXTURES = [
   Path.join(ROOT, 'fixtures', 'demo', 'demo_exporter_AL.xlsx'),
   Path.join(ROOT, 'fixtures', 'demo', 'demo_exporter_FB.xlsx'),
+  // AL operator's 2024 prior-year slice so `year-on-year-swing` has a period to compare.
+  Path.join(ROOT, 'fixtures', 'demo', 'demo_exporter_AL_2024.xlsx'),
 ];
 
 /**
@@ -123,6 +125,13 @@ const EXPECTED = [
       );
     },
   },
+  {
+    id: 'year-on-year-swing',
+    count: 1, // the AL operator's 2024 → 2026 received-for-export swing (prior-year slice)
+    topMatches(top) {
+      assert.match(top.reason, /tonnage/i, 'YoY reason describes the tonnage swing');
+    },
+  },
 ];
 
 let result;
@@ -157,7 +166,7 @@ before(async () => {
 });
 
 test('ingest reads ≥2 fixtures into one DB-free dataset (step 1)', () => {
-  assert.equal(data.loads.length, 100, 'demo set is 50 AL + 50 FB loads');
+  assert.equal(data.loads.length, 130, 'demo set is 50 AL + 50 FB + 30 AL-2024 loads');
   assert.equal(data.warnings.length, 0, 'the curated demo fixtures parse cleanly');
 
   const operators = new Set(data.loads.map((l) => l.operatorId));

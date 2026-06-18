@@ -21,7 +21,7 @@ Verified by running the current detectors over both files via `ingest()`:
 
 | Detector | Expected | Detail |
 | --- | --- | --- |
-| `ingest` | 100 loads, 2 operators, 0 warnings | |
+| `ingest` | 130 loads, 2 operators, 0 warnings | 50 AL-2026 + 50 FB-2026 + 30 AL-2024 |
 | `ewc-not-packaging` | **5** findings | 2 hazardous (`15 01 10*`) → critical; 2 non-packaging (`20 03 01`) → high; 1 off-list (`XX 99 99`) → high |
 | `chain-mass-balance` | **8** findings | 5 export-leg (T>S), 3 osr-leg (BK>T, no interim) — all critical |
 | `single-supplier→many-operators` *(when built)* | **1** | "Shared Metals Recovery Ltd" (postcode `LS1 4AB`) across both operators — 7 loads (4 AL + 3 FB) |
@@ -33,13 +33,13 @@ Verified by running the current detectors over both files via `ingest()`:
 | `single-customer←many-operators` *(seeded)* | **1** | OSR "Global Reprocessing Ltd" across both operators — 5 loads (3 AL + 2 FB) |
 | `osr-refusal-rate` *(seeded)* | "Global Reprocessing Ltd" elevated | that OSR has 2 of 5 loads refused (40%); other refused loads sit on single-load OSRs |
 | `arithmetic-integrity` *(seeded)* | **1** | one AL load whose `NET_WEIGHT` ≠ `GROSS − TARE − PALLET` (off by 120 t) |
-| `year-on-year-swing` *(seeded, separate file)* | swing | see prior-year slice below |
+| `year-on-year-swing` *(seeded)* | **1** | AL operator's 2024 → 2026 received-for-export swing (the prior-year slice is in the default ingest) |
 
 ## Prior-year slice (for `year-on-year-swing`)
 `demo_exporter_AL_2024.xlsx` — the **same operator** (`E-ACC10001AL`), 30 loads dated 2024 with
-tonnages ~half of 2026, so a year-on-year comparison shows a clear drop. **Not** part of the
-default demo ingest (that stays AL + FB 2026, 100 loads, so the golden-path counts above hold).
-Exercise YoY on the `{AL_2024, AL}` pair in the detector's unit test, or via a dedicated ingest.
+tonnages ~half of 2026, so a year-on-year comparison shows a clear swing. **Included in the
+default ingest** (AL-2026 + FB-2026 + AL-2024 = 130 loads) so `year-on-year-swing` fires in the
+UI. It carries only clean baseline rows (no other seeds), so the five ★ counts are unchanged.
 
 ## Notes for the build loop
 - **`operatorIds` and `loadIndexes` on entities are `Set`s, not arrays** — the network detectors
