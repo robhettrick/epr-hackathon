@@ -33,6 +33,7 @@
 const { parseFile } = require('./parser');
 const { normalise } = require('./normalise');
 const { deriveEntities } = require('./entity-derivation');
+const { applyNetworkSeed } = require('./seed-overlay');
 
 /**
  * Ingest one file: parse → normalise, tagging warnings with their source path.
@@ -79,6 +80,13 @@ function unionInto(set, items) {
  *
  * @param {string[]|string} [filePaths] paths to .xlsx submissions (≥2 on the
  *   golden path). A bare string is tolerated as a single-element list.
+ * @param {{seedNetwork?: boolean|object}} [options] when `seedNetwork` is truthy,
+ *   apply the deterministic network seed overlay (a shared supplier + vehicle
+ *   across operators) before entities are derived — needed so the cross-operator
+ *   network detector can fire on the full fixtures, which do not overlap naturally
+ *   (`seed-overlay.js`). Pass an object to override the overlay's defaults. OFF by
+ *   default: the curated demo set has its shared entity baked in, so the golden
+ *   path / smoke test never seed.
  * @returns {Promise<{loads: object[], entities: object, reference: {allowedEwc: string[], allowedMaterials: string[]}, warnings: object[]}>}
  *   `loads` are canonical Loads concatenated in file order (each tagged with its
  *   operatorId/material); `entities` is the `{operators, suppliers, osrs,
@@ -86,7 +94,7 @@ function unionInto(set, items) {
  *   merged allowed-list union; `warnings` is every parse/normalise/file warning,
  *   each tagged with its source `file`.
  */
-async function ingest(filePaths = []) {
+async function ingest(filePaths = [], options = {}) {
   const paths = Array.isArray(filePaths) ? filePaths : [filePaths];
   const warnings = [];
 
@@ -104,15 +112,23 @@ async function ingest(filePaths = []) {
   // preserves array order, so Loads concatenate deterministically in file order.
   const perFile = await Promise.all(paths.map(ingestOne));
 
-  const loads = [];
+  const collected = [];
   const allowedEwc = new Set();
   const allowedMaterials = new Set();
   for (const file of perFile) {
-    loads.push(...file.loads);
+    collected.push(...file.loads);
     unionInto(allowedEwc, file.reference.allowedEwc);
     unionInto(allowedMaterials, file.reference.allowedMaterials);
     warnings.push(...file.warnings);
   }
+
+  // Opt-in network seed: re-point a few loads per operator at one shared
+  // supplier/vehicle so a cross-operator entity exists for the network detector.
+  // Applied to the concatenated array (so the seed spans files) and before
+  // derivation (so the shared entity's back-refs index the returned `loads`).
+  const loads = options.seedNetwork
+    ? applyNetworkSeed(collected, options.seedNetwork === true ? {} : options.seedNetwork)
+    : collected;
 
   // Entities derive from the fully concatenated array so loadIndexes are valid
   // across files and a supplier/vehicle can span operators (network detectors).

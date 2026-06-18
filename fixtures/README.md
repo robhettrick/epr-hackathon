@@ -20,13 +20,32 @@ and the detectors. Each has the same sheet structure: data on *Exported (section
 
 ## Known limitations (synthetic data)
 - These are realistic templates filled with synthetic (faker-style) data. Suppliers, carriers,
-  vehicles and OSRs are **unlikely to overlap naturally across files**, so the **network
-  detectors** (single-supplier→many-operators, shared-vehicle-across-operators) will need a
-  **seeded shared entity** to fire convincingly in the demo — e.g. inject one supplier (or one
-  vehicle reg) into a handful of loads in both files.
+  vehicles and OSRs **do not overlap naturally across files**, so the **network detectors**
+  (single-supplier→many-operators, shared-vehicle-across-operators) need a **seeded shared
+  entity** to fire. This seed is now provided two ways — see "Seeded shared network entity" below.
 - The auto-calculated fields reconcile exactly, and `exported` / `received-by-OSR` look randomly
   generated — see `docs/anomaly-scenarios-from-sample.md`. Seed deliberate anomalies for the demo
   rather than relying on artifacts.
+
+## Seeded shared network entity
+The network detectors need one supplier (and/or vehicle) appearing under **≥2 operators**. The
+two fixture sets get there differently — but seed the **same recognisable entities** so the demo
+narrative holds either way:
+
+| Entity | Value | Keyed on |
+| --- | --- | --- |
+| Shared supplier | `Shared Metals Recovery Ltd`, postcode **`LS1 4AB`** | `supplierPostcode` (AJ) — entity-derivation keys suppliers on postcode before name, so the seed shares the **postcode** |
+| Shared carrier vehicle | reg **`SH24RED`** | `carrierVehicleReg` (BE) |
+
+- **Curated demo set (`demo/*`)** — the shared entity is **baked into the rows** (committed
+  binaries): `Shared Metals Recovery Ltd` on 7 loads (4 AL + 3 FB) and `SH24RED` on 4 loads. The
+  golden path / smoke test ingest these directly with **no overlay**, so their counts stay exact.
+- **Full fixtures (this folder, `FIXTURES=raw`)** — the real submissions are **not** mutated.
+  Instead a deterministic **ingest-time overlay** (`src/ingest/seed-overlay.js`) re-points the
+  first few loads per operator at the shared supplier + vehicle when `ingest(files,
+  { seedNetwork: true })` is called (the server passes this only for `FIXTURES=raw`). This keeps
+  the binaries un-touched and the seed reproducible. After ingest, `LS1 4AB` (and `SH24RED`) span
+  both operators.
 
 ## Reference data (already generated)
 - `reference/allowed-codes.json` — valid EWC codes + materials extracted from `Sheet1`

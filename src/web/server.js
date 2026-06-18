@@ -48,7 +48,8 @@ const HOST = process.env.HOST || '0.0.0.0';
 // Default to the curated demo set (fast boot, legible seeded findings: ewc 5,
 // chain 8, shared supplier/vehicle across operators). Set FIXTURES=raw to load
 // the full 1,000-load real submissions instead (slow boot, shows scale).
-const FIXTURES = process.env.FIXTURES === 'raw'
+const USE_RAW = process.env.FIXTURES === 'raw';
+const FIXTURES = USE_RAW
   ? [
       Path.join(ROOT, 'fixtures', 'exporter_E-ACC12245AL_E25SR500020912AL-b3c87758.xlsx'),
       Path.join(ROOT, 'fixtures', 'exporter_E-ACC12245FB_E25SR500020912FB.xlsx'),
@@ -57,6 +58,12 @@ const FIXTURES = process.env.FIXTURES === 'raw'
       Path.join(ROOT, 'fixtures', 'demo', 'demo_exporter_AL.xlsx'),
       Path.join(ROOT, 'fixtures', 'demo', 'demo_exporter_FB.xlsx'),
     ];
+
+// The curated demo set has the shared supplier/vehicle baked into its rows; the
+// full submissions are synthetic and do not overlap naturally, so apply the
+// deterministic network seed overlay only when booting on the raw fixtures
+// (seed-overlay.js / IMPLEMENTATION_PLAN item G).
+const SEED_NETWORK = USE_RAW;
 
 // govuk-frontend ships its Nunjucks templates + compiled assets under dist/.
 // Resolve the package root via require so the path holds wherever node_modules
@@ -102,7 +109,7 @@ function registerDetectors() {
  * @returns {Promise<{data: object, result: object}>}
  */
 async function buildReadModel() {
-  const dataset = await ingest(FIXTURES);
+  const dataset = await ingest(FIXTURES, { seedNetwork: SEED_NETWORK });
 
   const allowedCodes = require(Path.join(ROOT, 'reference', 'allowed-codes.json')); // eslint-disable-line global-require
   const data = {
