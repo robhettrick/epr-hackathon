@@ -56,6 +56,7 @@
           <div class="govuk-grid-column-one-third">
             {{ govukSelect({
               label: { text: "Minimum severity" },
+              hint: { text: "Any or higher" },
               id: "minSeverity",
               name: "minSeverity",
               items: detector.severityOptions
