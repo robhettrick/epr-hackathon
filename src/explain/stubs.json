@@ -1,0 +1,8 @@
+{
+  "ewc-not-packaging": "The waste-classification (EWC) code on this load is not a recognised packaging code. UK packaging-waste exports must carry a code from chapter 15 01; a code from another chapter, an unrecognised code, or a hazardous (*) code is out of scope for packaging and warrants investigation.",
+  "chain-mass-balance": "The reported tonnages along the export chain do not reconcile. The quantity received for export, the quantity exported, and the quantity received by the overseas reprocessor should never increase down the chain; a leg that increases is physically impossible and points to a data-integrity problem.",
+  "material-profile": "The declared recyclable proportion is inconsistent with the recyclable grade implied by this material. A load declaring materially less than its expected grade suggests mis-declaration, contamination, or a transcription error.",
+  "destination-plausibility": "Waste of this material was declared to a destination with no known reprocessing capacity for it. Shipments to countries that lack the relevant reprocessing infrastructure are implausible and may indicate a Basel-relevant mis-declaration.",
+  "single-supplier-many-operators": "This supplier feeds an unusually high number of distinct operators across the submissions. A single source spread thinly across many exporters is a pattern associated with waste-laundering or front operations and is worth a closer look.",
+  "default": "An anomaly detector flagged this subject for investigation. See the evidence for the figures that triggered the finding."
+}

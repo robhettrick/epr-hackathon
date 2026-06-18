@@ -42,11 +42,21 @@
  * Scoring (ADR-005): each detector owns its detector-local score; the orchestrator
  * does NOT reinterpret or rescale. Sorting/threshold surfacing is triage (item E).
  *
- * Dependency rule (ADR C4): `engine → detectors → model`.
+ * Reasons (ADR-007): a detector emits a finding; the investigator-facing
+ * `Finding.reason` is owned by the `explain/` layer, not the detector. After
+ * fan-out the orchestrator runs every detector's findings through
+ * `explain.applyReasons`, so reason resolution (cache → flag-gated LLM →
+ * detector text → per-detector stub) lives in one generic place with no
+ * per-detector branching. The flag is OFF by default, so this is deterministic
+ * and network-free on the golden path.
+ *
+ * Dependency rule (ADR C4): `engine → detectors → model`, and `engine → explain`
+ * (explain is consumed by the engine, never the reverse).
  */
 
 const { getEnabled, isShadow } = require('../detectors/registry');
 const { loadConfig, configFor } = require('../detectors/config');
+const { applyReasons } = require('../explain');
 
 /**
  * Run one detector under guard. Never rejects: a thrown/rejected `evaluate`
@@ -128,6 +138,13 @@ async function run(data = {}, ctx = {}) {
       error,
     });
     if (error) errors.push({ detectorId: meta.id, error });
+  }
+
+  // Fill each finding's `reason` via the explain layer (ADR-007). One pass over
+  // the assembled lists keeps it generic; counts are unchanged (reasons only).
+  const explainOptions = ctx.explain || {};
+  for (const id of Object.keys(byDetector)) {
+    byDetector[id] = await applyReasons(byDetector[id], explainOptions); // eslint-disable-line no-await-in-loop
   }
 
   return { byDetector, detectors: records, errors };
