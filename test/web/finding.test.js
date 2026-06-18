@@ -15,6 +15,7 @@ const assert = require('node:assert');
 
 const { build } = require('../../src/web/server');
 const { triage } = require('../../src/engine/triage');
+const { humaniseKey } = require('../../src/web/routes');
 
 describe('web: finding detail (GET /detectors/{id}/findings/{findingId})', () => {
   let server;
@@ -56,8 +57,8 @@ describe('web: finding detail (GET /detectors/{id}/findings/{findingId})', () =>
     // Every evidence key/value appears on the page (ewc evidence: ewcCode, material,
     // category). The detail view renders any evidence shape generically.
     for (const [key, value] of Object.entries(finding.evidence)) {
-      assert.ok(res.payload.includes(key), `evidence key "${key}" must render`);
-      if (value !== null && value !== undefined) {
+      assert.ok(res.payload.includes(humaniseKey(key)), `evidence key "${humaniseKey(key)}" must render`);
+      if (value !== null && value !== undefined && typeof value !== 'object') {
         assert.ok(res.payload.includes(String(value)), `evidence value "${value}" must render`);
       }
     }
@@ -71,7 +72,7 @@ describe('web: finding detail (GET /detectors/{id}/findings/{findingId})', () =>
 
     // thresholdsUsed is shown for auditability (ewc echoes `scores`).
     for (const key of Object.keys(finding.evidence)) {
-      assert.ok(res.payload.includes(key));
+      assert.ok(res.payload.includes(humaniseKey(key)));
     }
     assert.ok(res.payload.includes('Thresholds used'));
     // Severity rendered as a coloured govuk tag (top ewc hit is hazardous → critical).

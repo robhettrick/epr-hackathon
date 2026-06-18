@@ -144,17 +144,42 @@ function buildSeverityOptions(selected) {
  * null/undefined shows as an em dash. The view escapes the result as data.
  */
 function describeValue(value) {
-  if (value === null || value === undefined) return '—';
-  if (value instanceof Date) return value.toISOString();
-  if (typeof value === 'object') return JSON.stringify(value);
+  if (value === null || value === undefined || value === '') return '—';
+  if (value instanceof Date) return value.toISOString().slice(0, 10);
+  if (Array.isArray(value)) {
+    return value.length ? value.map(describeValue).join(', ') : '—';
+  }
+  if (typeof value === 'object') {
+    const parts = Object.entries(value).map(([k, v]) => `${humaniseKey(k)}: ${describeValue(v)}`);
+    return parts.length ? parts.join('; ') : '—';
+  }
   return String(value);
 }
 
-/** Flatten a plain object into `{ key, value }` rows for a govuk summary list,
- * stringifying each value generically. A non-object (or empty) yields no rows. */
+/** Turn a camelCase / snake_case data key into a human label for the detail view
+ * ("operatorIds" → "Operator IDs", "concentrationTonnage" → "Concentration tonnage"),
+ * upper-casing known acronyms. Keeps the UI investigator-facing, not raw JSON keys. */
+const KEY_ACRONYMS = { id: 'ID', ids: 'IDs', osr: 'OSR', ewc: 'EWC', uk: 'UK' };
+function humaniseKey(key) {
+  return String(key)
+    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+    .replace(/[_-]+/g, ' ')
+    .trim()
+    .split(/\s+/)
+    .map((word, i) => {
+      const lower = word.toLowerCase();
+      if (KEY_ACRONYMS[lower]) return KEY_ACRONYMS[lower];
+      return i === 0 ? lower.charAt(0).toUpperCase() + lower.slice(1) : lower;
+    })
+    .join(' ') || '—';
+}
+
+/** Flatten a plain object into `{ key, value }` rows for a govuk summary list:
+ * human-readable key + a plainly-rendered value (arrays joined, nested flattened).
+ * A non-object (or empty) yields no rows. */
 function toDetailRows(obj) {
   if (!obj || typeof obj !== 'object') return [];
-  return Object.entries(obj).map(([key, value]) => ({ key, value: describeValue(value) }));
+  return Object.entries(obj).map(([key, value]) => ({ key: humaniseKey(key), value: describeValue(value) }));
 }
 
 /**
@@ -259,4 +284,6 @@ module.exports = {
   buildDetectorList,
   buildDetectorView,
   buildFindingView,
+  humaniseKey,
+  describeValue,
 };
