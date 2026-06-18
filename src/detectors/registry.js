@@ -35,6 +35,19 @@
  * shadow results not-surfaced; triage/web filter them), so the registry exposes
  * `isShadow(Detector)` rather than hiding shadow detectors here (ADR-008).
  *
+ * Promotion path (shadow → live)
+ * ------------------------------
+ * Shadow mode is the safe rollout lane: a new detector ships `shadow:true` so it
+ * RUNS against real submissions (and is logged at boot, so an operator can see it
+ * firing and check its count/quality) without surfacing noise to a regulator. Once
+ * its findings look right, **promote it by a one-line edit** — set `shadow:false`
+ * (or drop the flag; default is live) in its `meta`. Nothing else changes: the
+ * orchestrator, triage and web layers are generic over `surfaced`, so the detector
+ * appears in the list/counts on the next boot with no edit to those layers.
+ * Demotion is the exact reverse (`shadow:true` ⇒ it keeps running but stops
+ * surfacing). `enabled:false` is the heavier lever — it stops the detector running
+ * at all — whereas a shadow detector still runs and can be audited.
+ *
  * Dependency rule (ADR C4): `detectors → model`. The registry depends on nothing.
  */
 

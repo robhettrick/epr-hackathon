@@ -212,6 +212,19 @@ async function start() {
     `Spot the Anomaly listening on ${server.info.uri} — `
     + `${data.loads.length} loads, ${result.detectors.length} detectors`,
   );
+
+  // Shadow detectors run + log but never surface in the UI/counts (ADR-008). Log
+  // each one that fired so an operator can watch a shadow detector's output while
+  // it is validated, ahead of promoting it live (shadow:false). Silent if none.
+  const shadowed = result.detectors.filter((d) => d.shadow);
+  if (shadowed.length > 0) {
+    // eslint-disable-next-line no-console
+    console.log(
+      `Shadow detectors (running, not surfaced): ${
+        shadowed.map((d) => `${d.id} → ${d.count} finding(s)`).join(', ')
+      }`,
+    );
+  }
   return server;
 }
 
