@@ -40,8 +40,11 @@ const SEVERITY = Object.freeze({
 
 const SEVERITIES = Object.freeze(Object.values(SEVERITY));
 
-/** Subject kinds a finding can be about — a raw load, or a derived entity
- * (mirrors `ENTITY_TYPE` plus `load`). Matches PRD §5.2's `subject.type`. */
+/** Subject kinds a finding can be about — a raw load, a derived entity
+ * (mirrors `ENTITY_TYPE` plus `load`), or a reporting period. Matches PRD §5.2's
+ * `subject.type` and its `scope: 'load' | 'entity' | 'period'` vocabulary: a
+ * cross-period detector (year-on-year swing) flags a `period` — an
+ * operator-and-year slice that is neither a single load nor a derived entity. */
 const SUBJECT_TYPE = Object.freeze({
   LOAD: 'load',
   OPERATOR: 'operator',
@@ -49,6 +52,7 @@ const SUBJECT_TYPE = Object.freeze({
   OSR: 'osr',
   VEHICLE: 'vehicle',
   COUNTRY: 'country',
+  PERIOD: 'period',
 });
 
 const SUBJECT_TYPES = Object.freeze(Object.values(SUBJECT_TYPE));
