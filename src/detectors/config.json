@@ -42,5 +42,13 @@
     "minLoads": 3,
     "baseScore": 60,
     "highRefusalRate": 0.5
+  },
+  "shared-vehicle-across-operators": {
+    "maxOperatorsPerVehicle": 1,
+    "requireOverlap": true,
+    "toleranceDays": 0,
+    "baseScore": 60,
+    "saturationOperators": 5,
+    "highOperators": 3
   }
 }
