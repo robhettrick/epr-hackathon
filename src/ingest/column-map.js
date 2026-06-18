@@ -45,8 +45,14 @@ const COLUMN_MAP = Object.freeze({
   EWC_CODE: 'ewcCode', // H
   DESCRIPTION_WASTE: 'descriptionWaste', // I
 
-  // weights / proportion
+  // weights / proportion — gross/tare/pallet are the inputs `arithmetic-integrity`
+  // recomputes net from (net should equal gross − tare − pallet); non-target is
+  // the contaminant weight carried for completeness.
+  GROSS_WEIGHT: 'gross', // K
+  TARE_WEIGHT: 'tare', // L
+  PALLET_WEIGHT: 'pallet', // M
   NET_WEIGHT: 'net', // N
+  WEIGHT_OF_NON_TARGET_MATERIALS: 'nonTargetWeight', // Q
   RECYCLABLE_PROPORTION_PERCENTAGE: 'recyclableProportion', // R
 
   // chain tonnages

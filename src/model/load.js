@@ -23,7 +23,11 @@
  *   Y   receivedByOsr              date received by the overseas reprocessor
  *   H   ewcCode                    European Waste Catalogue code (e.g. "15 01 04")
  *   I   descriptionWaste           per-load material/grade description (carries the "(NN.N%)" grade)
- *   N   net                        net weight of the load
+ *   K   gross                      gross weight of the load (recompute input)
+ *   L   tare                       tare weight of the container (recompute input)
+ *   M   pallet                     pallet weight (recompute input)
+ *   N   net                        net weight of the load (should equal gross − tare − pallet)
+ *   Q   nonTargetWeight            weight of non-target (contaminant) materials
  *   R   recyclableProportion       declared recyclable proportion (0–1)
  *   S   tonnageReceivedForExport   chain tonnage: received for export
  *   T   tonnageExported            chain tonnage: exported
@@ -116,8 +120,15 @@ function makeLoad(raw = {}) {
     ewcCode: toEwc(raw.ewcCode),
     descriptionWaste: toText(raw.descriptionWaste),
 
-    // weights (N, R)
+    // weights: the recompute inputs (K, L, M), the declared net (N), the
+    // non-target contaminant weight (Q), and the recyclable proportion (R).
+    // `arithmetic-integrity` recomputes net = gross − tare − pallet and flags
+    // any load whose declared `net` does not reconcile.
+    gross: toNumber(raw.gross),
+    tare: toNumber(raw.tare),
+    pallet: toNumber(raw.pallet),
     net: toNumber(raw.net),
+    nonTargetWeight: toNumber(raw.nonTargetWeight),
     recyclableProportion: toNumber(raw.recyclableProportion),
 
     // chain tonnages (S, T, BK)

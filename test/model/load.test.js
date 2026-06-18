@@ -14,7 +14,11 @@ test('makeLoad builds a fully typed Load from a raw canonical row', () => {
     receivedByOsr: '2026-03-01',
     ewcCode: '15 01 04',
     descriptionWaste: 'AAIG aluminium cans (97.5%)',
+    gross: '367',
+    tare: 10,
+    pallet: '5',
     net: '253.7',
+    nonTargetWeight: '1.2',
     recyclableProportion: 0.8,
     tonnageReceivedForExport: '253.7',
     tonnageExported: '4.7',
@@ -39,6 +43,11 @@ test('makeLoad builds a fully typed Load from a raw canonical row', () => {
   // numerics are real numbers, not strings
   assert.equal(load.net, 253.7);
   assert.equal(typeof load.net, 'number');
+  // recompute inputs (K/L/M/Q) used by arithmetic-integrity, coerced to numbers
+  assert.equal(load.gross, 367);
+  assert.equal(load.tare, 10);
+  assert.equal(load.pallet, 5);
+  assert.equal(load.nonTargetWeight, 1.2);
   assert.equal(load.recyclableProportion, 0.8);
   assert.equal(load.tonnageReceivedForExport, 253.7);
   assert.equal(load.tonnageExported, 4.7);
@@ -80,6 +89,10 @@ test('makeLoad with no argument yields an all-null Load', () => {
   assert.equal(load.operatorId, null);
   assert.equal(load.ewcCode, null);
   assert.equal(load.net, null);
+  assert.equal(load.gross, null);
+  assert.equal(load.tare, null);
+  assert.equal(load.pallet, null);
+  assert.equal(load.nonTargetWeight, null);
   assert.equal(load.exported, null);
 });
 

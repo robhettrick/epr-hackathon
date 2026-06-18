@@ -18,7 +18,11 @@ test('toCanonicalRow maps a sample machine-header row to canonical field names',
     DATE_RECEIVED_FOR_EXPORT: '2025-05-28T00:00:00.000Z',
     EWC_CODE: '01 01 01',
     DESCRIPTION_WASTE: 'Plastic - PET bottles',
+    GROSS_WEIGHT: 45,
+    TARE_WEIGHT: 10,
+    PALLET_WEIGHT: 5,
     NET_WEIGHT: 30,
+    WEIGHT_OF_NON_TARGET_MATERIALS: 1.5,
     RECYCLABLE_PROPORTION_PERCENTAGE: 0.9,
     TONNAGE_RECEIVED_FOR_EXPORT: 22.46625,
     TONNAGE_OF_UK_PACKAGING_WASTE_EXPORTED: 22.47,
@@ -40,7 +44,11 @@ test('toCanonicalRow maps a sample machine-header row to canonical field names',
   assert.equal(canonical.receivedForExport, '2025-05-28T00:00:00.000Z');
   assert.equal(canonical.ewcCode, '01 01 01');
   assert.equal(canonical.descriptionWaste, 'Plastic - PET bottles');
+  assert.equal(canonical.gross, 45);
+  assert.equal(canonical.tare, 10);
+  assert.equal(canonical.pallet, 5);
   assert.equal(canonical.net, 30);
+  assert.equal(canonical.nonTargetWeight, 1.5);
   assert.equal(canonical.recyclableProportion, 0.9);
   assert.equal(canonical.tonnageReceivedForExport, 22.46625);
   assert.equal(canonical.tonnageExported, 22.47);
