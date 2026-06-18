@@ -58,6 +58,7 @@ function buildDetectorList(result) {
     .map((d) => ({
       id: d.id,
       title: d.title,
+      description: d.description,
       scope: d.scope,
       count: d.count,
       href: `/detectors/${encodeURIComponent(d.id)}`,
@@ -108,6 +109,7 @@ function buildDetectorView(result, detectorId, options = {}) {
   return {
     id: record.id,
     title: record.title,
+    description: record.description,
     scope: record.scope,
     href: `/detectors/${encodeURIComponent(detectorId)}`,
     // The CSV download link carries the currently-applied thresholds so "download

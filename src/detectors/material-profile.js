@@ -106,6 +106,7 @@ const MaterialProfile = {
   meta: {
     id: 'material-profile',
     title: 'Recyclable proportion inconsistent with material grade',
+    description: "Compares each load's declared recyclable proportion against the grade implied by its material and flags figures well below the expected grade.",
     scope: SUBJECT_TYPE.LOAD,
     version: '1.0.0',
     enabled: true,

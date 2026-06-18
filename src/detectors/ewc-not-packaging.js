@@ -91,6 +91,7 @@ const EwcNotPackaging = {
   meta: {
     id: 'ewc-not-packaging',
     title: 'EWC code is not a packaging code',
+    description: "Flags loads whose EWC code is not a packaging code (15 01 xx), is hazardous, or is not a recognised code; packaging-waste exports should carry packaging codes.",
     scope: SUBJECT_TYPE.LOAD,
     version: '1.0.0',
     enabled: true,

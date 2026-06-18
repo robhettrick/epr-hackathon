@@ -26,7 +26,10 @@
     <div class="govuk-grid-column-full">
       <span class="govuk-caption-xl">Detector</span>
       <h1 class="govuk-heading-xl">{{ detector.title }}</h1>
-      <p class="govuk-body-l">
+      {% if detector.description %}
+        <p class="govuk-body-l">{{ detector.description }}</p>
+      {% endif %}
+      <p class="govuk-body">
         Findings ranked by score, highest first. Showing
         {{ detector.surfacedCount }} of {{ detector.total }}
         {{ "finding" if detector.total == 1 else "findings" }}

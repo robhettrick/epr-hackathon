@@ -85,6 +85,7 @@ const SingleCustomerManyOperators = {
   meta: {
     id: 'single-customer-many-operators',
     title: 'Single customer drawing from many operators',
+    description: "Flags an overseas reprocessor drawing loads from an unusually large number of operators, a possible funnel or waste-laundering pattern.",
     scope: SUBJECT_TYPE.OSR,
     version: '1.0.0',
     enabled: true,

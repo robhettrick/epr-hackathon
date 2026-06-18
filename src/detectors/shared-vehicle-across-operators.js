@@ -128,6 +128,7 @@ const SharedVehicleAcrossOperators = {
   meta: {
     id: 'shared-vehicle-across-operators',
     title: 'Carrier vehicle shared across operators on overlapping dates',
+    description: "Flags a carrier vehicle registration appearing under two or more operators with overlapping carriage dates, since one vehicle cannot be in two places at once.",
     scope: SUBJECT_TYPE.VEHICLE,
     version: '1.0.0',
     enabled: true,

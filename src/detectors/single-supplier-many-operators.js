@@ -82,6 +82,7 @@ const SingleSupplierManyOperators = {
   meta: {
     id: 'single-supplier-many-operators',
     title: 'Single supplier feeding many operators',
+    description: "Flags a supplier feeding an unusually large number of operators across submissions, a pattern only visible when the whole population is compared.",
     scope: SUBJECT_TYPE.SUPPLIER,
     version: '1.0.0',
     enabled: true,

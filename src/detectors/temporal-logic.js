@@ -80,6 +80,7 @@ const TemporalLogic = {
   meta: {
     id: 'temporal-logic',
     title: 'Chain dates out of order (export/receipt run backwards)',
+    description: "Flags loads whose chain dates run backwards, for example exported before being received, or received by the reprocessor before being exported.",
     scope: SUBJECT_TYPE.LOAD,
     version: '1.0.0',
     enabled: true,

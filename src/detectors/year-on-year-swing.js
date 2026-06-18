@@ -97,6 +97,7 @@ const YearOnYearSwing = {
   meta: {
     id: 'year-on-year-swing',
     title: 'Year-on-year tonnage swing for an operator',
+    description: "Compares an operator's total received-for-export tonnage between years and flags a large swing against the previous year's submission.",
     scope: SUBJECT_TYPE.PERIOD,
     version: '1.0.0',
     enabled: true,

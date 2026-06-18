@@ -93,6 +93,7 @@ const DestinationPlausibility = {
   meta: {
     id: 'destination-plausibility',
     title: 'Implausible reprocessing destination for the material',
+    description: "Flags loads sent to overseas destinations with no known reprocessing capacity for that material, for example aluminium declared to a country with no aluminium reprocessor.",
     scope: SUBJECT_TYPE.COUNTRY,
     version: '1.0.0',
     enabled: true,

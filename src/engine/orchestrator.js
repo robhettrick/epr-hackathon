@@ -200,6 +200,7 @@ async function run(data = {}, ctx = {}) {
     records.push({
       id: meta.id,
       title: meta.title,
+      description: meta.description || null,
       scope: meta.scope,
       version: meta.version,
       shadow,

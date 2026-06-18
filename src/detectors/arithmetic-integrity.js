@@ -65,6 +65,7 @@ const ArithmeticIntegrity = {
   meta: {
     id: 'arithmetic-integrity',
     title: 'Net weight does not reconcile (gross − tare − pallet)',
+    description: "Recomputes net weight as gross minus tare minus pallet and flags loads where the declared net does not match, a sign the figures were overridden or mistyped.",
     scope: SUBJECT_TYPE.LOAD,
     version: '1.0.0',
     enabled: true,

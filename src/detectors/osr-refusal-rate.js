@@ -86,6 +86,7 @@ const OsrRefusalRate = {
   meta: {
     id: 'osr-refusal-rate',
     title: 'Overseas reprocessor refuses a high share of its loads',
+    description: "Highlights overseas reprocessors that refuse an unusually high share of the loads sent to them, which can signal quality or compliance problems.",
     scope: SUBJECT_TYPE.OSR,
     version: '1.0.0',
     enabled: true,

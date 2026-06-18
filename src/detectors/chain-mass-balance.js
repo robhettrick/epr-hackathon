@@ -71,6 +71,7 @@ const ChainMassBalance = {
   meta: {
     id: 'chain-mass-balance',
     title: 'Chain mass-balance does not reconcile',
+    description: "Checks that tonnage only shrinks down the export chain (received for export >= exported >= received by reprocessor); a load that breaks this is physically impossible.",
     scope: SUBJECT_TYPE.LOAD,
     version: '1.0.0',
     enabled: true,

@@ -76,6 +76,7 @@ const VehiclePlateFormat = {
   meta: {
     id: 'vehicle-plate-format',
     title: 'Carrier vehicle registration is not a plausible UK number plate',
+    description: "Flags carrier vehicle registrations that match no valid UK number-plate format, a sign of a fictitious or mistyped carrier.",
     scope: SUBJECT_TYPE.LOAD,
     version: '1.0.0',
     enabled: true,
