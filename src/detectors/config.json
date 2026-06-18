@@ -27,5 +27,8 @@
     "tolerance": 0.5,
     "baseScore": 70,
     "criticalRel": 0.1
+  },
+  "vehicle-plate-format": {
+    "baseScore": 60
   }
 }
