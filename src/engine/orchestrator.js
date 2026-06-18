@@ -21,8 +21,19 @@
  *   ctx.reference  — the ingested reference lists (allowed EWC/material codes) so
  *                    detectors like `ewc-not-packaging` validate against them.
  *
- * Any additional keys the caller puts on the base `ctx` (e.g. a future run stamp,
- * ADR-008/item H) are forwarded to every detector untouched.
+ * Any additional keys the caller puts on the base `ctx` are forwarded to every
+ * detector untouched.
+ *
+ * Run-stamping (ADR-008)
+ * ----------------------
+ * After fan-out the orchestrator stamps every finding's `runMeta` with the
+ * reproducibility metadata — detector id+version, a hash of the exact config the
+ * detector ran under, the dataset snapshot id, and the run timestamp — so any
+ * flagged case is auditable and replayable against its inputs and logic. The
+ * snapshot id and timestamp are taken from `ctx` when supplied (deterministic
+ * tests, shared run id) and otherwise derived (a hash of the loads / the current
+ * time). The stamp is applied generically to every detector's findings, with no
+ * per-detector branching.
  *
  * Resilience (ADR-004)
  * --------------------
@@ -54,9 +65,44 @@
  * (explain is consumed by the engine, never the reverse).
  */
 
+const crypto = require('crypto');
+
 const { getEnabled, isShadow } = require('../detectors/registry');
 const { loadConfig, configFor } = require('../detectors/config');
 const { applyReasons } = require('../explain');
+const { stampRunMeta } = require('../model/finding');
+
+/**
+ * Deterministic JSON for hashing (ADR-008). `JSON.stringify` key order is
+ * insertion order, so the same logical config produced via different merge paths
+ * could stringify differently — sort object keys so the hash depends only on the
+ * VALUES, not how they were assembled. Dates serialise to their ISO string (a
+ * plain `JSON.stringify` over a Date object would otherwise lose the instant).
+ */
+function stableStringify(value) {
+  if (value === null || typeof value !== 'object') return JSON.stringify(value) ?? 'null';
+  if (value instanceof Date) return JSON.stringify(value.toISOString());
+  if (Array.isArray(value)) return `[${value.map(stableStringify).join(',')}]`;
+  const keys = Object.keys(value).sort();
+  return `{${keys.map((k) => `${JSON.stringify(k)}:${stableStringify(value[k])}`).join(',')}}`;
+}
+
+/** A short, stable content hash for run-stamping (config hash, snapshot id). */
+function shortHash(value) {
+  return crypto.createHash('sha1').update(stableStringify(value)).digest('hex').slice(0, 12);
+}
+
+/**
+ * The dataset snapshot id (ADR-008): a content hash over the ingested `Load[]` so
+ * two runs over the same data share an id and any change to the data changes it —
+ * which is what makes a flagged case replayable against the exact inputs. Hashing
+ * the loads (the canonical records detectors read) is sufficient; entities are
+ * derived from them. A caller may inject a precomputed id via `ctx.snapshotId`.
+ */
+function snapshotOf(data) {
+  const loads = (data && Array.isArray(data.loads)) ? data.loads : [];
+  return shortHash({ count: loads.length, loads });
+}
 
 /**
  * Run one detector under guard. Never rejects: a thrown/rejected `evaluate`
@@ -87,8 +133,10 @@ async function runOne(detector, data, ctx) {
  *   the ingested dataset from `ingest()`.
  * @param {object} [ctx] base context shared by all detectors. Recognised keys:
  *   `runtime` (pre-loaded runtime config; defaults to `loadConfig()` from disk),
- *   `reference` (fallback when `data.reference` is absent). Any other keys are
- *   forwarded to each detector's `ctx` unchanged.
+ *   `reference` (fallback when `data.reference` is absent), `snapshotId` /
+ *   `timestamp` (injected run-stamp fields, ADR-008; default to a hash of the
+ *   loads and the current time). Any other keys are forwarded to each detector's
+ *   `ctx` unchanged.
  * @returns {Promise<{
  *   byDetector: Object<string, object[]>,
  *   detectors: Array<{id,title,scope,version,shadow,surfaced,count,error:(Error|null)}>,
@@ -109,9 +157,21 @@ async function run(data = {}, ctx = {}) {
   // to anything the caller put on the base ctx.
   const reference = (data && data.reference !== undefined) ? data.reference : ctx.reference;
 
+  // Run stamp shared by every finding (ADR-008). The snapshot id and timestamp are
+  // injectable so a run is reproducible and tests are deterministic: the engine is
+  // not a pure detector, but the *timestamp* is taken from ctx (not read off the
+  // clock inside a detector) so the stamp stays under the caller's control.
+  const snapshotId = ctx.snapshotId !== undefined ? ctx.snapshotId : snapshotOf(data);
+  const timestamp = ctx.timestamp !== undefined ? ctx.timestamp : new Date().toISOString();
+
+  // Resolve each detector's effective config ONCE: it both reaches the detector on
+  // ctx.config and is hashed into its run stamp, so the configHash provably matches
+  // the thresholds the detector actually ran under.
+  const configs = detectors.map((detector) => configFor(detector, runtime));
+
   const outcomes = await Promise.all(
-    detectors.map((detector) => {
-      const detectorCtx = { ...ctx, reference, config: configFor(detector, runtime) };
+    detectors.map((detector, i) => {
+      const detectorCtx = { ...ctx, reference, config: configs[i] };
       return runOne(detector, data, detectorCtx);
     }),
   );
@@ -126,7 +186,17 @@ async function run(data = {}, ctx = {}) {
     const meta = detector.meta;
     const shadow = isShadow(detector);
 
-    byDetector[meta.id] = findings;
+    // Stamp every finding with its reproducibility metadata (ADR-008): detector
+    // id+version, the hash of the config it ran under, the dataset snapshot id, and
+    // the run timestamp. Generic over all detectors — no per-detector branching.
+    const runMeta = {
+      detectorId: meta.id,
+      detectorVersion: String(meta.version),
+      configHash: shortHash(configs[i]),
+      snapshotId,
+      timestamp,
+    };
+    byDetector[meta.id] = findings.map((finding) => stampRunMeta(finding, runMeta));
     records.push({
       id: meta.id,
       title: meta.title,
