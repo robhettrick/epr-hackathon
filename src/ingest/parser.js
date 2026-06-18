@@ -32,7 +32,7 @@
 
 const ExcelJS = require('exceljs');
 
-const { MACHINE_HEADERS } = require('./column-map');
+const { MACHINE_HEADERS, OPTIONAL_HEADERS } = require('./column-map');
 
 /** Sheet names in template v5.1. */
 const DATA_SHEET = 'Exported (sections 1, 2 and 3)';
@@ -88,8 +88,10 @@ function readCell(cell) {
 }
 
 /** Build a machine-header → column-index map from the header row, trimming names.
- * Returns `{ headerIndex, missing }` where `missing` lists mapped headers absent
- * from the sheet (so the normaliser/detectors degrade rather than guess). */
+ * Returns `{ headerIndex, missing }` where `missing` lists *required* mapped
+ * headers absent from the sheet (so the normaliser/detectors degrade rather than
+ * guess). Optional headers (column-map `OPTIONAL_HEADERS`) are excluded — a file
+ * may legitimately omit them, so their absence is not worth a warning. */
 function readHeaders(sheet) {
   const headerIndex = {};
   sheet.getRow(HEADER_ROW).eachCell((cell, colNumber) => {
@@ -98,7 +100,9 @@ function readHeaders(sheet) {
       headerIndex[name.trim()] = colNumber;
     }
   });
-  const missing = MACHINE_HEADERS.filter((h) => !(h in headerIndex));
+  const missing = MACHINE_HEADERS.filter(
+    (h) => !(h in headerIndex) && !OPTIONAL_HEADERS.includes(h),
+  );
   return { headerIndex, missing };
 }
 

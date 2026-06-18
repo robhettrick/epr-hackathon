@@ -32,6 +32,7 @@
  *   S   tonnageReceivedForExport   chain tonnage: received for export
  *   T   tonnageExported            chain tonnage: exported
  *   BK  tonnageReceivedByOsr       chain tonnage: received by OSR
+ *   AA  interimSite                whether the load passed through an interim site (Yes/No → boolean)
  *   AC  interimHandling            interim-site handling note (relaxes mass-balance)
  *   BJ  osrCountry                 destination country of the OSR
  *   BI  osrName                    name of the overseas reprocessor
@@ -136,7 +137,10 @@ function makeLoad(raw = {}) {
     tonnageExported: toNumber(raw.tonnageExported),
     tonnageReceivedByOsr: toNumber(raw.tonnageReceivedByOsr),
 
-    // handling + destination (AC, BJ, BI)
+    // handling + destination (AA, AC, BJ, BI). `interimSite` is the explicit
+    // Yes/No flag (AA); `interimHandling` is the interim-route OSR tonnage (AC).
+    // A load can be flagged interim with zero interim tonnage, so both are kept.
+    interimSite: toBool(raw.interimSite),
     interimHandling: toText(raw.interimHandling),
     osrCountry: toText(raw.osrCountry),
     osrName: toText(raw.osrName),

@@ -23,6 +23,7 @@ test('makeLoad builds a fully typed Load from a raw canonical row', () => {
     tonnageReceivedForExport: '253.7',
     tonnageExported: '4.7',
     tonnageReceivedByOsr: '1.9',
+    interimSite: 'Yes',
     interimHandling: 'No',
     osrCountry: 'Germany',
     osrName: 'Rhein Metall Recycling',
@@ -59,8 +60,11 @@ test('makeLoad builds a fully typed Load from a raw canonical row', () => {
   assert.ok(load.exported instanceof Date);
   assert.ok(load.receivedByOsr instanceof Date);
 
-  // booleans
+  // booleans — the AA interim-site flag (Yes/No → boolean), distinct from the
+  // AC interim tonnage in `interimHandling` (here the text "No").
   assert.equal(load.refused, false);
+  assert.equal(load.interimSite, true);
+  assert.equal(load.interimHandling, 'No');
 
   // immutable (detectors are pure — Loads must not be mutated)
   assert.ok(Object.isFrozen(load));
@@ -82,6 +86,20 @@ test('makeLoad coerces blanks/garbage to null and never throws', () => {
   assert.equal(load.tonnageExported, null);
   assert.equal(load.receivedForExport, null);
   assert.equal(load.refused, null);
+});
+
+test('interimSite (AA flag) is independent of interimHandling (AC tonnage)', () => {
+  // A load can be declared interim (AA = Yes) with no interim OSR tonnage (AC
+  // blank) — the boolean flag captures what the tonnage proxy cannot.
+  const interimNoTonnage = makeLoad({ interimSite: 'Yes', interimHandling: '' });
+  assert.equal(interimNoTonnage.interimSite, true);
+  assert.equal(interimNoTonnage.interimHandling, null);
+
+  // Not declared interim, ambiguous/blank flag → null (never throws).
+  const notInterim = makeLoad({ interimSite: 'No' });
+  assert.equal(notInterim.interimSite, false);
+  assert.equal(makeLoad({ interimSite: '' }).interimSite, null);
+  assert.equal(makeLoad().interimSite, null);
 });
 
 test('makeLoad with no argument yields an all-null Load', () => {

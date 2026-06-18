@@ -27,8 +27,10 @@
  * model coerces it as text, so a non-null `interimHandling` is a reliable proxy for
  * "this load went through an interim site" — which is what `chain-mass-balance`
  * needs to relax its inequality. The separate Yes/No flag
- * `DID_WASTE_PASS_THROUGH_AN_INTERIM_SITE` (AA) is intentionally NOT mapped: the
- * canonical Load has no field for it (see follow-up in IMPLEMENTATION_PLAN.md).
+ * `DID_WASTE_PASS_THROUGH_AN_INTERIM_SITE` (AA) is mapped to the canonical Load
+ * field `interimSite` (a boolean): it is the explicit declaration of an interim
+ * route, distinct from the AC tonnage proxy — a load can be flagged interim with
+ * zero interim tonnage, which `interimSite` captures and `interimHandling` cannot.
  */
 
 /**
@@ -61,6 +63,7 @@ const COLUMN_MAP = Object.freeze({
   TONNAGE_RECEIVED_BY_OSR: 'tonnageReceivedByOsr', // BK
 
   // handling + destination
+  DID_WASTE_PASS_THROUGH_AN_INTERIM_SITE: 'interimSite', // AA
   TONNAGE_PASSED_INTERIM_SITE_RECEIVED_BY_OSR: 'interimHandling', // AC
   OSR_COUNTRY: 'osrCountry', // BJ
   OSR_NAME: 'osrName', // BI
@@ -76,6 +79,18 @@ const COLUMN_MAP = Object.freeze({
 
 /** The machine header names this map understands (data columns only). */
 const MACHINE_HEADERS = Object.freeze(Object.keys(COLUMN_MAP));
+
+/**
+ * Mapped headers that are optional enrichments rather than pipeline requirements:
+ * a submission may legitimately omit them, so the parser does NOT warn when they
+ * are absent (the "missing header" warning is reserved for columns the detectors
+ * actually rely on). `DID_WASTE_PASS_THROUGH_AN_INTERIM_SITE` (AA → `interimSite`)
+ * is optional because `chain-mass-balance` already keys interim routing off the AC
+ * tonnage proxy (`interimHandling`); no detector requires the explicit AA flag.
+ * The full fixtures carry AA (so it populates where present); the curated demo set
+ * omits it (so its absence must stay silent — see fixtures/demo/README.md).
+ */
+const OPTIONAL_HEADERS = Object.freeze(['DID_WASTE_PASS_THROUGH_AN_INTERIM_SITE']);
 
 /** The canonical Load field names populated from data columns (Cover-tagged
  * `operatorId`/`material` excluded — they are not in this map). */
@@ -100,4 +115,4 @@ function toCanonicalRow(rawRow = {}) {
   return canonical;
 }
 
-module.exports = { COLUMN_MAP, MACHINE_HEADERS, CANONICAL_FIELDS, toCanonicalRow };
+module.exports = { COLUMN_MAP, MACHINE_HEADERS, OPTIONAL_HEADERS, CANONICAL_FIELDS, toCanonicalRow };

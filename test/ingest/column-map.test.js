@@ -6,6 +6,7 @@ const assert = require('node:assert/strict');
 const {
   COLUMN_MAP,
   MACHINE_HEADERS,
+  OPTIONAL_HEADERS,
   CANONICAL_FIELDS,
   toCanonicalRow,
 } = require('../../src/ingest/column-map');
@@ -27,6 +28,7 @@ test('toCanonicalRow maps a sample machine-header row to canonical field names',
     TONNAGE_RECEIVED_FOR_EXPORT: 22.46625,
     TONNAGE_OF_UK_PACKAGING_WASTE_EXPORTED: 22.47,
     TONNAGE_RECEIVED_BY_OSR: 5,
+    DID_WASTE_PASS_THROUGH_AN_INTERIM_SITE: 'Yes',
     TONNAGE_PASSED_INTERIM_SITE_RECEIVED_BY_OSR: 5,
     OSR_COUNTRY: 'Vietnam-VN',
     OSR_NAME: 'International ABC Waste Limited',
@@ -53,6 +55,7 @@ test('toCanonicalRow maps a sample machine-header row to canonical field names',
   assert.equal(canonical.tonnageReceivedForExport, 22.46625);
   assert.equal(canonical.tonnageExported, 22.47);
   assert.equal(canonical.tonnageReceivedByOsr, 5);
+  assert.equal(canonical.interimSite, 'Yes');
   assert.equal(canonical.interimHandling, 5);
   assert.equal(canonical.osrCountry, 'Vietnam-VN');
   assert.equal(canonical.osrName, 'International ABC Waste Limited');
@@ -105,6 +108,15 @@ test('a canonical row from the map feeds makeLoad into a typed Load', () => {
   // fields absent from the input default to null, never throw
   assert.equal(load.supplierName, null);
   assert.ok(Object.isFrozen(load));
+});
+
+test('OPTIONAL_HEADERS is frozen and a subset of the known machine headers', () => {
+  assert.ok(Object.isFrozen(OPTIONAL_HEADERS));
+  for (const h of OPTIONAL_HEADERS) {
+    assert.ok(MACHINE_HEADERS.includes(h), `${h} must be a known mapped header`);
+  }
+  // The interim-site flag is the (only) optional header — its absence must not warn.
+  assert.ok(OPTIONAL_HEADERS.includes('DID_WASTE_PASS_THROUGH_AN_INTERIM_SITE'));
 });
 
 test('COLUMN_MAP and MACHINE_HEADERS are frozen reference data', () => {

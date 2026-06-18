@@ -16,6 +16,10 @@ const AL_FIXTURE = path.join(
   'exporter_E-ACC12245AL_E25SR500020912AL-b3c87758.xlsx',
 );
 
+// The curated demo fixture mirrors the template but omits the optional AA
+// interim-site column — used to prove its absence is silent (no header warning).
+const DEMO_AL_FIXTURE = path.join(__dirname, '..', '..', 'fixtures', 'demo', 'demo_exporter_AL.xlsx');
+
 // Parsing the real fixture is the heart of this item; do it once and share.
 let parsed;
 test('parse the AL fixture (setup)', async () => {
@@ -73,6 +77,25 @@ test('a parsed row feeds the column map + makeLoad into a typed Load', () => {
 test('warnings are collected as an array (clean fixture → none)', () => {
   assert.ok(Array.isArray(parsed.warnings));
   assert.equal(parsed.warnings.length, 0, JSON.stringify(parsed.warnings));
+});
+
+test('the AA interim-site flag is parsed and maps to a boolean interimSite', () => {
+  // The full template carries DID_WASTE_PASS_THROUGH_AN_INTERIM_SITE (AA); every
+  // real row should set it, and it round-trips through the map into a boolean.
+  const withFlag = parsed.rows.filter((r) => 'DID_WASTE_PASS_THROUGH_AN_INTERIM_SITE' in r);
+  assert.ok(withFlag.length > 0, 'fixture carries the AA interim-site column');
+  const load = makeLoad(toCanonicalRow(withFlag[0]));
+  assert.equal(typeof load.interimSite, 'boolean');
+});
+
+test('a fixture missing the optional AA header parses without a header warning', async () => {
+  // The curated demo set omits AA; its absence must stay silent (the missing-
+  // header warning is reserved for required columns) — see fixtures/demo/README.md.
+  const demo = await parseFile(DEMO_AL_FIXTURE);
+  const headerWarnings = demo.warnings.filter((w) => w.scope === 'header');
+  assert.deepEqual(headerWarnings, [], JSON.stringify(demo.warnings));
+  // ...and a load from that fixture simply carries interimSite = null (no column).
+  assert.equal(makeLoad(toCanonicalRow(demo.rows[0])).interimSite, null);
 });
 
 test('readCell normalises placeholders, empty formulas and blanks to null', () => {
