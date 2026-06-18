@@ -131,4 +131,37 @@ function makeFinding(spec = {}) {
   return Object.freeze(finding);
 }
 
-module.exports = { makeFinding, SEVERITY, SEVERITIES, SUBJECT_TYPE, SUBJECT_TYPES };
+/**
+ * Return a copy of `finding` carrying the given run stamp on `runMeta` (ADR-008).
+ *
+ * A Finding is frozen (detectors are pure, and the engine must not mutate the
+ * findings they emit), so stamping the reproducibility metadata means rebuilding
+ * the Finding via `makeFinding` with every other field preserved — the same
+ * immutability discipline the explain layer uses for `reason`. The incoming
+ * `runMeta` is merged over whatever the detector already set, with the engine's
+ * stamp winning, so a detector can pre-seed fields without the stamp clobbering
+ * what it doesn't override (and vice-versa).
+ *
+ * Kept here (not in the engine) because populating the run stamp is an operation
+ * on the Finding contract itself; the engine decides *what* to stamp, the model
+ * owns *how* a stamped Finding is constructed.
+ *
+ * @param {object} finding a Finding produced by `makeFinding`.
+ * @param {object} [runMeta] the run-stamp fields to apply (engine-owned).
+ * @returns {object} a new frozen Finding identical except for `runMeta`.
+ */
+function stampRunMeta(finding, runMeta = {}) {
+  return makeFinding({
+    detectorId: finding.detectorId,
+    version: finding.version,
+    subject: finding.subject,
+    score: finding.score,
+    severity: finding.severity,
+    reason: finding.reason,
+    evidence: finding.evidence,
+    thresholdsUsed: finding.thresholdsUsed,
+    runMeta: { ...finding.runMeta, ...runMeta },
+  });
+}
+
+module.exports = { makeFinding, stampRunMeta, SEVERITY, SEVERITIES, SUBJECT_TYPE, SUBJECT_TYPES };

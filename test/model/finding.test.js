@@ -5,6 +5,7 @@ const assert = require('node:assert/strict');
 
 const {
   makeFinding,
+  stampRunMeta,
   SEVERITY,
   SEVERITIES,
   SUBJECT_TYPE,
@@ -107,4 +108,41 @@ test('the returned Finding and its subject are frozen (detectors are pure)', () 
   const f = makeFinding(validSpec());
   assert.equal(Object.isFrozen(f), true);
   assert.equal(Object.isFrozen(f.subject), true);
+});
+
+test('stampRunMeta returns a new frozen Finding carrying the run stamp (ADR-008)', () => {
+  const f = makeFinding(validSpec()); // runMeta defaults to {}
+  const runMeta = {
+    detectorId: 'ewc-not-packaging',
+    detectorVersion: '1',
+    configHash: 'abc123def456',
+    snapshotId: 'deadbeef0000',
+    timestamp: '2026-06-18T00:00:00.000Z',
+  };
+  const stamped = stampRunMeta(f, runMeta);
+
+  // a NEW object (Findings are immutable) — the original is untouched
+  assert.notEqual(stamped, f);
+  assert.deepEqual(f.runMeta, {}, 'the source finding is not mutated');
+  assert.deepEqual(stamped.runMeta, runMeta);
+  assert.equal(Object.isFrozen(stamped), true);
+
+  // every other contract field is preserved verbatim
+  assert.equal(stamped.detectorId, f.detectorId);
+  assert.equal(stamped.version, f.version);
+  assert.deepEqual(stamped.subject, f.subject);
+  assert.equal(stamped.score, f.score);
+  assert.equal(stamped.severity, f.severity);
+  assert.equal(stamped.reason, f.reason);
+  assert.deepEqual(stamped.evidence, f.evidence);
+  assert.deepEqual(stamped.thresholdsUsed, f.thresholdsUsed);
+});
+
+test('stampRunMeta merges over any detector-set runMeta, the stamp winning', () => {
+  const f = makeFinding(validSpec({ runMeta: { detectorNote: 'kept', snapshotId: 'old' } }));
+  const stamped = stampRunMeta(f, { snapshotId: 'new', timestamp: 't' });
+
+  assert.equal(stamped.runMeta.detectorNote, 'kept', 'detector-set field survives');
+  assert.equal(stamped.runMeta.snapshotId, 'new', 'engine stamp wins on conflict');
+  assert.equal(stamped.runMeta.timestamp, 't');
 });
